@@ -1,0 +1,60 @@
+name: Sync to Aliyun OSS
+
+
+#on:
+#  push:
+#    branches:
+#      - main
+#    paths:
+#      - 'config/**'
+#      - 'upgrade/**'
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup ossutil
+        run: |
+          wget https://gosspublic.alicdn.com/ossutil/1.7.15/ossutil64
+          chmod +x ossutil64
+          sudo mv ossutil64 /usr/local/bin/ossutil
+
+      - name: Configure ossutil
+        env:
+          OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+          OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
+          OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+        run: |
+          ossutil config -e $OSS_ENDPOINT -i $OSS_ACCESS_KEY_ID -k $OSS_ACCESS_KEY_SECRET
+
+      - name: Replace .com -> .cn and id.snapmaker.com -> api.snapmaker.cn
+        run: |
+          # 替换 config 文件夹下的所有文件
+          find config/ -type f -exec sed -i 's/id\.snapmaker\.com/api.snapmaker.cn/g' {} +
+          find config/ -type f -exec sed -i 's/\.com/\.cn/g' {} +
+          
+          # 替换 upgrade 文件夹下的所有文件
+          find upgrade/ -type f -exec sed -i 's/id\.snapmaker\.com/api.snapmaker.cn/g' {} +
+          find upgrade/ -type f -exec sed -i 's/\.com/\.cn/g' {} +
+
+      - name: Sync files to OSS
+        env:
+          OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+        run: |
+          # 同步配置文件
+          ossutil cp -r -f config/ oss://$OSS_BUCKET/config/ \
+            --meta "Cache-Control:public, max-age=3600"
+
+          # 同步版本信息文件
+          ossutil cp -r -f upgrade/ oss://$OSS_BUCKET/upgrade/ \
+            --meta "Cache-Control:public, max-age=3600"
+
+      - name: Refresh CDN cache
+        env:
+          OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+          CDN_DOMAIN: ${{ secrets.CDN_DOMAIN }}
+        run: |
+          echo "CDN cache refresh (optional)"

@@ -1,0 +1,7 @@
+{
+  "code":200,
+  "msg":"test for domain.",
+  "data":{
+    "api_server":"id.snapmaker.com"
+  }
+}
