@@ -1,35 +1,38 @@
 {
-"code":200,
-"msg":"test for upgrade snapmaker orca.",
-"data":
-{
-    "is_full_upgrade":true,
-    "is_force_upgrade":false,
-    "version":"2.1.5",
-    "release_type":"stable",
-    "platform_type":"win",
-     "full":
-     {
-            "file_size":125482488,
-            "file_md5":"B06787E8DC29FDBCBD4690126F49CDB8",
-            "file_sha256":"E7DC49FE76A67D39039F5D3AFBC2626B072685E3F982A9F94528A1F07A998027",
-            "file_url":"https://github.com/Snapmaker/OrcaSlicer/releases/tag/v2.1.5",
-            "file_describe":"update for snapmaker orca first slice soft.",
-			"reserved_1":"",
-            "reserved_2":""
-     },
-     "patch":
-     {
-         "2.2.0":
-         {
-            "file_size":125482488,
-            "file_md5":"B06787E8DC29FDBCBD4690126F49CDB8",
-            "file_sha256":"E7DC49FE76A67D39039F5D3AFBC2626B072685E3F982A9F94528A1F07A998027",
-            "file_url":"https://github.com/Snapmaker/OrcaSlicer/releases/tag/v2.1.5",
-            "file_describe":"update for snapmaker orca first slice soft.",
-			"reserved_1":"",
-            "reserved_2":""
-         }
-     }
-}
+    "code": 200,
+    "msg": "test for upgrade snapmaker orca.",
+    "data": {
+        "is_full_upgrade": true,
+        "is_force_upgrade": false,
+        "version": "2.1.5",
+        "release_type": "stable",
+        "platform_type": "mac",
+        "full": {
+            "default": {
+                "file_size": 125482488,
+                "file_md5": "B06787E8DC29FDBCBD4690126F49CDB8",
+                "file_sha256": "E7DC49FE76A67D39039F5D3AFBC2626B072685E3F982A9F94528A1F07A998027",
+                "file_url": "https://github.com/Snapmaker/OrcaSlicer/releases/tag/v2.1.5",
+                "reserved_1": "",
+                "reserved_2": ""
+            },
+            "arm": {
+                "file_size": 125482488,
+                "file_md5": "B06787E8DC29FDBCBD4690126F49CDB8",
+                "file_sha256": "E7DC49FE76A67D39039F5D3AFBC2626B072685E3F982A9F94528A1F07A998027",
+                "file_url": "https://github.com/Snapmaker/OrcaSlicer/releases/tag/v2.1.5",
+                "reserved_1": "",
+                "reserved_2": ""
+            },
+            "intel": {
+                "file_size": 125482488,
+                "file_md5": "B06787E8DC29FDBCBD4690126F49CDB8",
+                "file_sha256": "E7DC49FE76A67D39039F5D3AFBC2626B072685E3F982A9F94528A1F07A998027",
+                "file_url": "https://github.com/Snapmaker/OrcaSlicer/releases/tag/v2.1.5",
+                "reserved_1": "",
+                "reserved_2": ""
+            },
+            "file_describe": "update for snapmaker orca first slice soft."
+        }
+    }
 }
