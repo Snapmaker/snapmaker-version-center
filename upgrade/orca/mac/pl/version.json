@@ -1,0 +1,38 @@
+{
+    "code": 200,
+    "msg": "test for upgrade snapmaker orca.",
+    "data": {
+        "is_full_upgrade": true,
+        "is_force_upgrade": false,
+        "version": "2.1.5",
+        "release_type": "stable",
+        "platform_type": "mac",
+        "full": {
+            "default": {
+                "file_size": 125482488,
+                "file_md5": "B06787E8DC29FDBCBD4690126F49CDB8",
+                "file_sha256": "E7DC49FE76A67D39039F5D3AFBC2626B072685E3F982A9F94528A1F07A998027",
+                "file_url": "https://productionresultssa2.blob.core.windows.net/actions-results/0ae619e0-3333-445c-a04c-e89e5642f3bb/workflow-job-run-bf5745d3-6f0f-5e6a-bcd7-a2ad83f42228/artifacts/a454572dbb77ba934adaf9d949db3cae94e9440f79a821f46ade9531d1142c55.zip?rscd=attachment%3B+filename%3D%22Snapmaker_Orca_Mac_universal_V2.2.1.zip%22&se=2026-01-16T07%3A30%3A40Z&sig=xBBszrTxML9Om8VG856uWW3%2FkGogUV9S%2FhyrkRzOaeg%3D&ske=2026-01-16T07%3A54%3A59Z&skoid=ca7593d4-ee42-46cd-af88-8b886a2f84eb&sks=b&skt=2026-01-16T06%3A54%3A59Z&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skv=2025-11-05&sp=r&spr=https&sr=b&st=2026-01-16T07%3A20%3A35Z&sv=2025-11-05",
+                "reserved_1": "",
+                "reserved_2": ""
+            },
+            "arm": {
+                "file_size": 125482488,
+                "file_md5": "B06787E8DC29FDBCBD4690126F49CDB8",
+                "file_sha256": "E7DC49FE76A67D39039F5D3AFBC2626B072685E3F982A9F94528A1F07A998027",
+                "file_url": "https://release-assets.githubusercontent.com/github-production-release-asset/826610769/96749d2b-b32c-4a5a-b20f-0688460b5626?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-01-16T08%3A10%3A18Z&rscd=attachment%3B+filename%3DSnapmaker_Orca_Mac_arm64_V2.1.5.dmg&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-01-16T07%3A09%3A39Z&ske=2026-01-16T08%3A10%3A18Z&sks=b&skv=2018-11-09&sig=2yw77YKJ16gh4LoyzXYTXtilUMc7mxuvMfmIwC%2BPlcs%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc2ODU1MTcyMiwibmJmIjoxNzY4NTQ4MTIyLCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.seusnuTDzdnxVDXVmK_rggdFhRJG-ZSxMZiuWTw_RBs&response-content-disposition=attachment%3B%20filename%3DSnapmaker_Orca_Mac_arm64_V2.1.5.dmg&response-content-type=application%2Foctet-stream",
+                "reserved_1": "",
+                "reserved_2": ""
+            },
+            "intel": {
+                "file_size": 125482488,
+                "file_md5": "B06787E8DC29FDBCBD4690126F49CDB8",
+                "file_sha256": "E7DC49FE76A67D39039F5D3AFBC2626B072685E3F982A9F94528A1F07A998027",
+                "file_url": "https://release-assets.githubusercontent.com/github-production-release-asset/826610769/32118b24-ef77-40fb-a355-26c25a8049ce?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-01-16T08%3A11%3A10Z&rscd=attachment%3B+filename%3DSnapmaker_Orca_Mac_x86_64_V2.1.5.dmg&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-01-16T07%3A10%3A14Z&ske=2026-01-16T08%3A11%3A10Z&sks=b&skv=2018-11-09&sig=sUhMqUNZwsBo2rt3KqNGhWmpoDNQ5YgH2ktgaDUDXgA%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc2ODU1MTcyNCwibmJmIjoxNzY4NTQ4MTI0LCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.ctGJ5cenWmizJcyXCSZgxF4cuDVrHBaClPLzuQ6P0iU&response-content-disposition=attachment%3B%20filename%3DSnapmaker_Orca_Mac_x86_64_V2.1.5.dmg&response-content-type=application%2Foctet-stream",
+                "reserved_1": "",
+                "reserved_2": ""
+            },
+            "file_describe": "update for snapmaker orca first slice soft."
+        }
+    }
+}
