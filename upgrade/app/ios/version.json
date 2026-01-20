@@ -24,14 +24,14 @@
       "file_md5": ""
     },
     "android":{
-      "store_url": "itms-apps://itunes.Android.com/snmapermaker/xxx",
-      "channels": ["huawei", "xiaomi", "oppo", "vivo"],
+      "store_url": "https://www.snapmaker.com/snapmaker-app",
+      "channels": ["Snapmaker"],
       "file_size": 1024,
       "file_md5": "1234567890"
     },
     "harmonyOS":{
-      "store_url": "itms-apps://itunes.Android.com/snmapermaker/xxx",
-      "channels": ["huawei", "xiaomi", "oppo", "vivo"],
+      "store_url": "https://www.snapmaker.com/snapmaker-app",
+      "channels": ["Snapmaker"],
       "file_size": 1024,
       "file_md5": "1234567890"
     }
