@@ -1,0 +1,419 @@
+name: Sync to Aliyun OSS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'config/**'
+      - 'upgrade/**'
+  workflow_dispatch:
+    inputs:
+      manual_run:
+        description: '手动触发同步配置文件和资源文件到 OSS'
+        required: false
+        default: 'true'
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect environment
+        run: |
+          if [ -n "${ACT:-}" ]; then
+            echo "Running in act (local)"
+            echo "ACT_ENV=true" >> $GITHUB_ENV
+          else
+            echo "Running in GitHub Actions"
+            echo "ACT_ENV=false" >> $GITHUB_ENV
+          fi
+
+      - name: Validate secrets
+        env:
+          OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+          OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
+          OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+        run: |
+          set -euo pipefail
+
+          echo "Validating required secrets..."
+          if [ -z "$OSS_ACCESS_KEY_ID" ]; then
+            echo "ERROR: OSS_ACCESS_KEY_ID is not set"
+            exit 1
+          fi
+          if [ -z "$OSS_ACCESS_KEY_SECRET" ]; then
+            echo "ERROR: OSS_ACCESS_KEY_SECRET is not set"
+            exit 1
+          fi
+          if [ -z "$OSS_ENDPOINT" ]; then
+            echo "ERROR: OSS_ENDPOINT is not set"
+            exit 1
+          fi
+          if [ -z "$OSS_BUCKET" ]; then
+            echo "ERROR: OSS_BUCKET is not set"
+            exit 1
+          fi
+          echo "All required secrets are present"
+
+      - name: Setup ossutil
+        run: |
+          set -euo pipefail
+
+          echo "Downloading ossutil..."
+          wget -q https://gosspublic.alicdn.com/ossutil/1.7.15/ossutil64
+          chmod +x ossutil64
+          sudo mv ossutil64 /usr/local/bin/ossutil
+
+          echo "Verifying ossutil installation..."
+          ossutil --version
+
+      - name: Configure ossutil
+        env:
+          OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+          OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
+        run: |
+          set -euo pipefail
+
+          echo "Configuring ossutil..."
+          ossutil config -e $OSS_ENDPOINT -i $OSS_ACCESS_KEY_ID -k $OSS_ACCESS_KEY_SECRET
+
+          echo "Testing OSS connection..."
+          ossutil ls oss:// || echo "Warning: Could not list OSS buckets"
+
+      - name: Install jq
+        run: |
+          set -euo pipefail
+
+          echo "Installing jq..."
+          sudo apt-get update -qq
+          sudo apt-get install -y jq
+
+          echo "Verifying jq installation..."
+          jq --version
+
+      - name: Download files from config URLs
+        env:
+          OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+        run: |
+          set -eu
+
+          mkdir -p downloads
+          > files_to_sync.txt
+          > sync_warnings.txt
+          > sync_errors.txt
+
+          echo "========================================="
+          echo "Starting resource file download process"
+          echo "========================================="
+
+          # 定义需要下载的文件后缀（正则模式）
+          DOWNLOAD_EXTENSIONS='\.(zip|png|jpg|jpeg|gif|exe|bin|apk|dmg|pdf|tar|gz|tgz|rar|7z|deb|rpm|msi|iso|svg|ico|webp|bmp|mp3|mp4|wav|avi|mov|stl|gcode|snap3dp|snapcnc|snaplaser)$'
+
+          # 创建临时文件存储 URL -> MD5 映射
+          URL_MD5_FILE=$(mktemp)
+          trap "rm -f $URL_MD5_FILE" EXIT
+
+          # 第一遍：从所有 JSON 文件中提取 URL 和对应的 MD5
+          echo "Building URL to MD5 mapping..."
+          for json_file in $(find config/ upgrade/ -name "*.json" -type f 2>/dev/null); do
+            jq -r '.. | objects | select(.file_url?) | "\(.file_url)\t\(.file_md5 // "")"' "$json_file" 2>/dev/null >> "$URL_MD5_FILE" || true
+          done
+
+          # 构建关联数组
+          declare -A URL_MD5_MAP
+          while IFS=$'\t' read -r url md5; do
+            if [ -n "$url" ] && [ "$url" != "null" ]; then
+              URL_MD5_MAP["$url"]="$md5"
+            fi
+          done < "$URL_MD5_FILE"
+
+          echo "Found ${#URL_MD5_MAP[@]} URLs with potential MD5 mappings"
+
+          # 第二遍：提取所有 URL 并处理
+          ALL_URLS_FILE=$(mktemp)
+          trap "rm -f $URL_MD5_FILE $ALL_URLS_FILE" EXIT
+
+          for json_file in $(find config/ upgrade/ -name "*.json" -type f 2>/dev/null); do
+            echo "Extracting URLs from: $json_file"
+            grep -oE 'https?://[^"'\''[:space:]<>]+' "$json_file" 2>/dev/null >> "$ALL_URLS_FILE" || true
+          done
+
+          # 去重并处理每个 URL
+          sort -u "$ALL_URLS_FILE" | while read -r url; do
+            [ -z "$url" ] && continue
+
+            # 清理 URL（移除尾部标点）
+            url=$(echo "$url" | sed 's/[,;:]*$//')
+
+            # 提取 URL 的主体部分（去掉查询参数），用于文件扩展名检查
+            url_main=$(echo "$url" | cut -d'?' -f1)
+
+            # 检查是否有文件后缀（使用清理后的 URL）
+            if ! echo "$url_main" | grep -qiE "$DOWNLOAD_EXTENSIONS"; then
+              echo "SKIP (no file extension): $url"
+              continue
+            fi
+
+            echo "Processing: $url"
+
+            # 从 URL 提取路径（去掉协议和域名）
+            url_without_protocol=$(echo "$url" | sed 's|https\?://||')
+            domain=$(echo "$url_without_protocol" | cut -d'/' -f1)
+            url_path=$(echo "$url_without_protocol" | cut -d'/' -f2-)
+
+            # OSS 路径：download/{path}（不包含域名）
+            oss_path="oss://$OSS_BUCKET/download/$url_path"
+            config_md5="${URL_MD5_MAP[$url]:-}"
+
+            # 下载文件到 downloads/download/{path}
+            target_dir="downloads/download/$(dirname "$url_path")"
+            target_file="downloads/download/$url_path"
+            mkdir -p "$target_dir"
+
+            if wget -q -O "$target_file" "$url"; then
+              # 计算下载文件的实际 MD5
+              downloaded_md5=$(md5sum "$target_file" | awk '{print $1}' | tr '[:lower:]' '[:upper:]')
+              echo "Downloaded: download/$url_path (MD5: $downloaded_md5)"
+
+              # 检查配置文件中的 MD5 是否匹配（仅作为警告，不影响上传决策）
+              if [ -n "$config_md5" ]; then
+                config_md5_upper=$(echo "$config_md5" | tr '[:lower:]' '[:upper:]')
+                if [ "$downloaded_md5" != "$config_md5_upper" ]; then
+                  echo "WARNING: Config MD5 mismatch for download/$url_path (Config=$config_md5_upper, Actual=$downloaded_md5)"
+                  echo "CONFIG_MD5_MISMATCH: $url (Config=$config_md5_upper, Actual=$downloaded_md5)" >> sync_warnings.txt
+                fi
+              fi
+
+              # 检查 OSS 上是否已存在，并比较 x-oss-meta-md5
+              echo "Checking OSS for: download/$url_path"
+              oss_info=$(ossutil stat "$oss_path" 2>/dev/null || true)
+
+              if [ -n "$oss_info" ]; then
+                # 获取 x-oss-meta-md5 元数据
+                oss_meta_md5=$(echo "$oss_info" | grep -i "X-Oss-Meta-Md5" | awk -F': ' '{print $2}' | tr -d ' ' | tr '[:lower:]' '[:upper:]')
+
+                if [ -n "$oss_meta_md5" ]; then
+                  # 有 x-oss-meta-md5，使用它比较
+                  if [ "$downloaded_md5" = "$oss_meta_md5" ]; then
+                    echo "SKIP: download/$url_path (x-oss-meta-md5 match: $oss_meta_md5)"
+                    rm -f "$target_file"
+                    continue
+                  else
+                    echo "UPDATE: download/$url_path (OSS meta-md5: $oss_meta_md5, New MD5: $downloaded_md5)"
+                  fi
+                else
+                  # 无 x-oss-meta-md5，强制重新上传以添加 meta
+                  echo "UPDATE: download/$url_path (No x-oss-meta-md5 found, will re-upload with meta)"
+                fi
+              else
+                echo "NEW: download/$url_path"
+              fi
+
+              # 记录文件用于上传
+              echo "download/$url_path" >> files_to_sync.txt
+            else
+              echo "ERROR: Failed to download $url"
+              echo "DOWNLOAD_FAILED: $url" >> sync_errors.txt
+            fi
+          done || true
+
+          # 显示下载统计和问题汇总
+          echo "========================================="
+          echo "Download Summary:"
+          if [ -f files_to_sync.txt ] && [ -s files_to_sync.txt ]; then
+            echo "Files to sync: $(wc -l < files_to_sync.txt)"
+            cat files_to_sync.txt
+          else
+            echo "No new files to sync"
+          fi
+
+          echo ""
+          echo "========================================="
+          echo "Issues Summary:"
+          echo "========================================="
+
+          # 统计警告
+          if [ -f sync_warnings.txt ] && [ -s sync_warnings.txt ]; then
+            echo ""
+            echo "⚠️  WARNINGS ($(wc -l < sync_warnings.txt)):"
+            cat sync_warnings.txt
+          else
+            echo "✅ No warnings"
+          fi
+
+          # 统计错误
+          if [ -f sync_errors.txt ] && [ -s sync_errors.txt ]; then
+            echo ""
+            echo "❌ ERRORS ($(wc -l < sync_errors.txt)):"
+            cat sync_errors.txt
+          else
+            echo "✅ No errors"
+          fi
+
+          echo "========================================="
+
+      - name: Create modified copies for OSS upload
+        run: |
+          set -eu
+
+          echo "Current working directory: $(pwd)"
+          echo "Listing current directory:"
+          ls -la
+
+          echo "Creating temporary directories for modified files..."
+          rm -rf temp_oss
+          mkdir -p temp_oss
+
+          echo "Copying files to temporary directory..."
+          if [ -d "config" ] && [ "$(ls -A config 2>/dev/null)" ]; then
+            cp -a config temp_oss/
+            echo "Copied config directory"
+          else
+            echo "WARNING: config directory is empty or not found"
+            ls -la config 2>/dev/null || echo "config directory does not exist"
+          fi
+
+          if [ -d "upgrade" ] && [ "$(ls -A upgrade 2>/dev/null)" ]; then
+            cp -a upgrade temp_oss/
+            echo "Copied upgrade directory"
+          else
+            echo "WARNING: upgrade directory is empty or not found"
+            ls -la upgrade 2>/dev/null || echo "upgrade directory does not exist"
+          fi
+
+          echo "Listing temp_oss contents:"
+          ls -la temp_oss/ || true
+          find temp_oss -type f 2>/dev/null | head -20 || echo "No files in temp_oss"
+
+          echo "Applying domain replacements to temporary copies..."
+          # 将所有下载文件的域名替换为 https://meta-cfg.snapmaker.cn/download
+          # 匹配 https://xxx.snapmaker.com/path 格式的 URL，替换域名部分
+          find temp_oss -type f -name "*.json" -exec sed -i 's|https://[a-zA-Z0-9.-]*\.snapmaker\.com/|https://meta-cfg.snapmaker.cn/download/|g' {} + 2>/dev/null || true
+          # 其他 snapmaker.com 域名（非 URL）替换为 snapmaker.cn
+          find temp_oss -type f -name "*.json" -exec sed -i 's/snapmaker\.com/snapmaker.cn/g' {} + 2>/dev/null || true
+
+          echo "Domain replacement completed"
+
+      - name: Sync config files to OSS
+        env:
+          OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+        run: |
+          set -euo pipefail
+
+          echo "Syncing configuration files to OSS..."
+
+          if [ -d "temp_oss/config" ] && [ "$(ls -A temp_oss/config 2>/dev/null)" ]; then
+            echo "Uploading config files (skipping unchanged files)..."
+            ossutil sync temp_oss/config/ oss://$OSS_BUCKET/config/ --update \
+              --meta "Cache-Control:public, max-age=3600"
+            echo "Config files synced successfully"
+          else
+            echo "No config files to sync"
+          fi
+
+          if [ -d "temp_oss/upgrade" ] && [ "$(ls -A temp_oss/upgrade 2>/dev/null)" ]; then
+            echo "Uploading upgrade files (skipping unchanged files)..."
+            ossutil sync temp_oss/upgrade/ oss://$OSS_BUCKET/upgrade/ --update \
+              --meta "Cache-Control:public, max-age=3600"
+            echo "Upgrade files synced successfully"
+          else
+            echo "No upgrade files to sync"
+          fi
+
+      - name: Sync downloaded files to OSS
+        env:
+          OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+        run: |
+          set -euo pipefail
+
+          # 初始化验证结果文件
+          >upload_verify_errors.txt
+
+          # 检查是否有需要同步的文件
+          if [ -d "downloads" ] && [ "$(ls -A downloads 2>/dev/null)" ]; then
+            echo "Syncing downloaded files to OSS..."
+
+            # 逐个同步文件，保持路径结构
+            find downloads/ -type f | while read file; do
+              # 获取相对路径
+              rel_path=${file#downloads/}
+
+              # 计算本地文件 MD5
+              local_md5=$(md5sum "$file" | awk '{print $1}' | tr '[:lower:]' '[:upper:]')
+
+              echo "Uploading: $rel_path (Local MD5: $local_md5)"
+              # 上传时附带 x-oss-meta-md5 元数据
+              ossutil cp -f "$file" "oss://$OSS_BUCKET/$rel_path" \
+                --meta "Cache-Control:public, max-age=86400" \
+                --meta "x-oss-meta-md5:$local_md5"
+
+              # 上传后验证：获取 OSS 上文件的 x-oss-meta-md5
+              oss_info=$(ossutil stat "oss://$OSS_BUCKET/$rel_path" 2>/dev/null || true)
+              if [ -n "$oss_info" ]; then
+                oss_meta_md5=$(echo "$oss_info" | grep -i "X-Oss-Meta-Md5" | awk -F': ' '{print $2}' | tr -d ' ' | tr '[:lower:]' '[:upper:]')
+
+                if [ "$local_md5" = "$oss_meta_md5" ]; then
+                  echo "  ✅ VERIFIED: x-oss-meta-md5 matches ($oss_meta_md5)"
+                else
+                  echo "  ❌ MISMATCH: Local MD5=$local_md5, OSS x-oss-meta-md5=$oss_meta_md5"
+                  echo "MD5_VERIFY_FAILED: $rel_path (Local=$local_md5, OSS meta=$oss_meta_md5)" >> upload_verify_errors.txt
+                fi
+              else
+                echo "  ⚠️  WARNING: Could not verify OSS file after upload"
+                echo "VERIFY_FAILED: $rel_path (Could not get OSS file info)" >> upload_verify_errors.txt
+              fi
+            done
+
+            echo ""
+            echo "========================================="
+            echo "Upload Verification Summary:"
+            echo "========================================="
+            if [ -f upload_verify_errors.txt ] && [ -s upload_verify_errors.txt ]; then
+              echo "❌ VERIFICATION ERRORS ($(wc -l < upload_verify_errors.txt)):"
+              cat upload_verify_errors.txt
+              echo ""
+              echo "⚠️  WARNING: Some files have MD5 mismatch!"
+            else
+              echo "✅ All uploaded files verified successfully"
+            fi
+            echo "========================================="
+
+            echo "Resource files sync completed"
+          else
+            echo "No new resource files to sync (all files already up-to-date)"
+          fi
+
+      - name: Cleanup temporary files
+        if: always()
+        run: |
+          echo "Cleaning up temporary files..."
+          rm -rf temp_oss
+          rm -rf downloads
+          rm -f files_to_sync.txt
+          rm -f sync_warnings.txt
+          rm -f sync_errors.txt
+          echo "Cleanup completed"
+
+      - name: Refresh CDN cache
+        if: success()
+        env:
+          OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+          CDN_DOMAIN: ${{ secrets.CDN_DOMAIN }}
+        run: |
+          echo "CDN cache refresh (optional)"
+          echo "CDN Domain: $CDN_DOMAIN"
+
+      - name: Job summary
+        if: always()
+        run: |
+          echo "========================================="
+          echo "Job Summary"
+          echo "========================================="
+          echo "Environment: ${ACT_ENV:-GitHub Actions}"
+          echo "OSS Bucket: ${{ secrets.OSS_BUCKET }}"
+          echo "Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "========================================="
