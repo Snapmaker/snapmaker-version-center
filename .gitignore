@@ -1,0 +1,19 @@
+# Act 本地测试文件
+.secrets
+.env
+
+# 测试生成的文件
+downloads/
+files_to_sync.txt
+.ossutilconfig
+
+# IDE
+.idea/
+
+# 临时文件
+*.log
+temp_oss/
+.actrc
+
+#claude
+.claude
