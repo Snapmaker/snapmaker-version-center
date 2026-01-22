@@ -300,7 +300,8 @@ jobs:
           # 替换所有匹配的 URL: https://xxx/path/file.ext -> https://meta-cfg.snapmaker.cn/download/xxx/path/file.ext
           find temp_oss -type f -name "*.json" | while read json_file; do
             # 使用 sed 替换 URL，保留域名作为路径的一部分
-            sed -i -E "s|https://([a-zA-Z0-9.-]+)/([^\"]+\\.($EXTENSIONS))|https://meta-cfg.snapmaker.cn/download/\\1/\\2|gi" "$json_file"
+            # 使用 # 作为 sed 分隔符，避免与 URL 中的 / 和扩展名中的 | 冲突
+            sed -i -E "s#https://([a-zA-Z0-9.-]+)/([^\"]+\.($EXTENSIONS))#https://meta-cfg.snapmaker.cn/download/\1/\2#gi" "$json_file"
           done
 
           # 其他 snapmaker.com 域名（非 URL）替换为 snapmaker.cn
