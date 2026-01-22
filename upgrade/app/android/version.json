@@ -1,0 +1,40 @@
+{
+  "code": 200,
+  "data": {
+    "has_update": true,
+    "is_force": false,
+    "latest_version": "2.2.3",
+    "latest_build_number": 1226223524,
+    "contents": {
+      "en": {
+        "title": "New Version Available",
+        "description": "..",
+        "items": ["Feature 1", "Feature 2"]
+      },
+      "zh": {
+        "title": "发现新版本",
+        "description": "优化整体体验，请尽快升级最新版本",
+        "items": ["新增延时摄影文件列表获取，请更新最新版本", "优化机器设备控制逻辑","新增机器人控制日志"]
+      }
+    },
+    "ios":{
+      "store_url": "itms-apps://itunes.apple.com/app/id6670739251",
+      "channels": ["appstore"],
+      "file_size": 1024,
+      "file_md5": ""
+    },
+    "android":{
+      "store_url": "https://www.snapmaker.com/snapmaker-app",
+      "channels": ["Snapmaker"],
+      "file_size": 1024,
+      "file_md5": "1234567890"
+    },
+    "harmonyOS":{
+      "store_url": "https://www.snapmaker.com/snapmaker-app",
+      "channels": ["Snapmaker"],
+      "file_size": 1024,
+      "file_md5": "1234567890"
+    }
+  }
+}
+
