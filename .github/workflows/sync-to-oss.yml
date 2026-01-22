@@ -174,7 +174,7 @@ jobs:
             target_file="downloads/download/$url_path"
             mkdir -p "$target_dir"
 
-            if wget -q -O "$target_file" "$url"; then
+            if wget --show-progress --progress=bar:force --timeout=60 --tries=3 -O "$target_file" "$url"; then
               # 计算下载文件的实际 MD5
               downloaded_md5=$(md5sum "$target_file" | awk '{print $1}' | tr '[:lower:]' '[:upper:]')
               echo "Downloaded: download/$url_path (MD5: $downloaded_md5)"
@@ -290,9 +290,19 @@ jobs:
           find temp_oss -type f 2>/dev/null | head -20 || echo "No files in temp_oss"
 
           echo "Applying domain replacements to temporary copies..."
-          # 将所有下载文件的域名替换为 https://meta-cfg.snapmaker.cn/download
-          # 匹配 https://xxx.snapmaker.com/path 格式的 URL，替换域名部分
-          find temp_oss -type f -name "*.json" -exec sed -i 's|https://[a-zA-Z0-9.-]*\.snapmaker\.com/|https://meta-cfg.snapmaker.cn/download/|g' {} + 2>/dev/null || true
+          # 将所有下载文件的 URL 替换为 https://meta-cfg.snapmaker.cn/download/{path}
+          # 匹配格式: https://domain/path -> https://meta-cfg.snapmaker.cn/download/domain/path
+          # 只替换带有文件扩展名的 URL（如 .dmg, .exe, .zip 等）
+
+          # 定义需要替换的文件扩展名模式
+          EXTENSIONS="dmg|exe|zip|png|jpg|jpeg|gif|bin|apk|pdf|tar|gz|tgz|rar|7z|deb|rpm|msi|iso|svg|ico|webp|bmp|mp3|mp4|wav|avi|mov|stl|gcode|snap3dp|snapcnc|snaplaser"
+
+          # 替换所有匹配的 URL: https://xxx/path/file.ext -> https://meta-cfg.snapmaker.cn/download/xxx/path/file.ext
+          find temp_oss -type f -name "*.json" | while read json_file; do
+            # 使用 sed 替换 URL，保留域名作为路径的一部分
+            sed -i -E "s|https://([a-zA-Z0-9.-]+)/([^\"]+\\.($EXTENSIONS))|https://meta-cfg.snapmaker.cn/download/\\1/\\2|gi" "$json_file"
+          done
+
           # 其他 snapmaker.com 域名（非 URL）替换为 snapmaker.cn
           find temp_oss -type f -name "*.json" -exec sed -i 's/snapmaker\.com/snapmaker.cn/g' {} + 2>/dev/null || true
 
@@ -398,14 +408,74 @@ jobs:
           rm -f sync_errors.txt
           echo "Cleanup completed"
 
+      - name: Setup aliyun-cli for CDN
+        if: success()
+        run: |
+          set -euo pipefail
+
+          echo "Installing aliyun-cli..."
+          wget -q https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz
+          tar -xzf aliyun-cli-linux-latest-amd64.tgz
+          sudo mv aliyun /usr/local/bin/
+          rm -f aliyun-cli-linux-latest-amd64.tgz
+
+          echo "Verifying aliyun-cli installation..."
+          aliyun version
+
       - name: Refresh CDN cache
         if: success()
         env:
-          OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+          CDN_ACCESS_KEY_ID: ${{ secrets.CDN_ACCESS_KEY_ID }}
+          CDN_ACCESS_KEY_SECRET: ${{ secrets.CDN_ACCESS_KEY_SECRET }}
           CDN_DOMAIN: ${{ secrets.CDN_DOMAIN }}
         run: |
-          echo "CDN cache refresh (optional)"
+          set -euo pipefail
+
+          echo "========================================="
+          echo "Refreshing CDN cache..."
           echo "CDN Domain: $CDN_DOMAIN"
+          echo "========================================="
+
+          # 检查 CDN 密钥是否配置
+          if [ -z "$CDN_ACCESS_KEY_ID" ] || [ -z "$CDN_ACCESS_KEY_SECRET" ]; then
+            echo "WARNING: CDN credentials not configured, skipping CDN refresh"
+            exit 0
+          fi
+
+          # 配置 aliyun-cli
+          aliyun configure set \
+            --profile cdn-profile \
+            --mode AK \
+            --region cn-hangzhou \
+            --access-key-id "$CDN_ACCESS_KEY_ID" \
+            --access-key-secret "$CDN_ACCESS_KEY_SECRET"
+
+          # 刷新目录（config/, upgrade/, download/）
+          REFRESH_PATHS="https://$CDN_DOMAIN/config/
+          https://$CDN_DOMAIN/upgrade/
+          https://$CDN_DOMAIN/download/"
+
+          echo "Refreshing directories:"
+          echo "$REFRESH_PATHS"
+
+          # 调用 CDN 刷新 API（刷新目录）
+          RESULT=$(aliyun --profile cdn-profile cdn RefreshObjectCaches \
+            --ObjectPath "$REFRESH_PATHS" \
+            --ObjectType Directory 2>&1) || true
+
+          echo "CDN Refresh API Response:"
+          echo "$RESULT"
+
+          # 检查是否成功
+          if echo "$RESULT" | grep -q "RefreshTaskId"; then
+            TASK_ID=$(echo "$RESULT" | grep -o '"RefreshTaskId":"[^"]*"' | cut -d'"' -f4)
+            echo "✅ CDN refresh task submitted successfully!"
+            echo "Task ID: $TASK_ID"
+          else
+            echo "⚠️  CDN refresh may have failed, please check manually"
+          fi
+
+          echo "========================================="
 
       - name: Job summary
         if: always()
