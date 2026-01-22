@@ -469,7 +469,7 @@ jobs:
 
           # 检查是否成功
           if echo "$RESULT" | grep -q "RefreshTaskId"; then
-            TASK_ID=$(echo "$RESULT" | grep -o '"RefreshTaskId":"[^"]*"' | cut -d'"' -f4)
+            TASK_ID=$(echo "$RESULT" | grep -o '"RefreshTaskId":"[^"]*"' | cut -d'"' -f4 || true)
             echo "✅ CDN refresh task submitted successfully!"
             echo "Task ID: $TASK_ID"
           else
