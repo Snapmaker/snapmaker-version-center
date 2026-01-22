@@ -3,7 +3,7 @@
     "msg": "test for upgrade snapmaker orca.",
     "data": {
         "is_full_upgrade": true,
-        "is_force_upgrade": false,
+        "is_force_upgrade": true,
         "version": "2.1.0",
         "release_type": "stable",
         "platform_type": "win",
