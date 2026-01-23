@@ -2,7 +2,7 @@
     "code": 200,
     "msg": "this is a big big upgrade",
     "data": {
-        "is_force_upgrade":true,
+        "is_force_upgrade":false,
         "min_support_pc_version":"2.0.5",
         "max_support_pc_version":"2.5.0",
         "file_version": "02.09.88.88",
