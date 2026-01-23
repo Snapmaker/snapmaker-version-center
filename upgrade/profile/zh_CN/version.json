@@ -4,7 +4,7 @@
     "data": {
         "is_force_upgrade":false,
         "min_support_pc_version":"2.0.5",
-        "max_support_pc_version":"2.1.0",
+        "max_support_pc_version":"2.5.0",
         "file_version": "02.02.88.88",
         "file_size":251229,
         "file_md5": "5CDB51EA2E76F3D79381B57EFD20C3C8",
