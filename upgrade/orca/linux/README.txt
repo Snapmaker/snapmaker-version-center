@@ -1,0 +1,1 @@
+Linux is not currently supported.
