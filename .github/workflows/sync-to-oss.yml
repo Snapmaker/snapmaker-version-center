@@ -297,11 +297,12 @@ jobs:
           # 定义需要替换的文件扩展名模式
           EXTENSIONS="dmg|exe|zip|png|jpg|jpeg|gif|bin|apk|pdf|tar|gz|tgz|rar|7z|deb|rpm|msi|iso|svg|ico|webp|bmp|mp3|mp4|wav|avi|mov|stl|gcode|snap3dp|snapcnc|snaplaser"
 
-          # 替换所有匹配的 URL: https://xxx/path/file.ext -> https://meta-cfg.snapmaker.cn/download/xxx/path/file.ext
+          # 替换所有匹配的 URL: https://xxx/path/file.ext -> https://meta-cfg.snapmaker.cn/download/path/file.ext
+          # 注意：不保留原始域名，因为 OSS 存储路径是 download/{path}（不含域名）
           find temp_oss -type f -name "*.json" | while read json_file; do
-            # 使用 sed 替换 URL，保留域名作为路径的一部分
+            # 使用 sed 替换 URL，移除域名部分
             # 使用 # 作为 sed 分隔符，避免与 URL 中的 / 和扩展名中的 | 冲突
-            sed -i -E "s#https://([a-zA-Z0-9.-]+)/([^\"]+\.($EXTENSIONS))#https://meta-cfg.snapmaker.cn/download/\1/\2#gi" "$json_file"
+            sed -i -E "s#https://[a-zA-Z0-9.-]+/([^\"]+\.($EXTENSIONS))#https://meta-cfg.snapmaker.cn/download/\1#gi" "$json_file"
           done
 
           # 其他 snapmaker.com 域名（非 URL）替换为 snapmaker.cn
