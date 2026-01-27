@@ -2,7 +2,7 @@
   "code": 200,
   "data": {
     "has_update": true,
-    "is_force": false,
+    "is_force": true,
     "latest_version": "2.2.8",
     "latest_build_number": 1226223524,
     "contents": {
@@ -37,5 +37,6 @@
     }
   }
 }
+
 
 
