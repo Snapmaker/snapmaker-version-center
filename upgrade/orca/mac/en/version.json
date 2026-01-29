@@ -1,10 +1,10 @@
 {
-    "code": 403,
+    "code": 200,
     "msg": "test for upgrade snapmaker orca.",
     "data": {
         "is_full_upgrade": true,
         "is_force_upgrade": false,
-        "version": "2.1.5",
+        "version": "2.2.3",
         "release_type": "stable",
         "platform_type": "mac",
         "full": {
@@ -32,7 +32,7 @@
                 "reserved_1": "",
                 "reserved_2": ""
             },
-            "file_describe": "update for snapmaker orca first slice soft."
+            "file_describe": ""
         }
     }
 }
