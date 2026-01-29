@@ -1,5 +1,5 @@
 {
-    "code": 403,
+    "code": 200,
     "msg": "test for upgrade snapmaker orca.",
     "data": {
         "is_full_upgrade": true,
