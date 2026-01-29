@@ -21,7 +21,7 @@
                 "file_md5": "B06787E8DC29FDBCBD4690126F49CDB8",
                 "file_sha256": "E7DC49FE76A67D39039F5D3AFBC2626B072685E3F982A9F94528A1F07A998027",
                 "file_url": "https://github.com/Snapmaker/OrcaSlicer/releases/download/v2.1.5/Snapmaker_Orca_Mac_arm64_V2.1.5.dmg",
-                "reserved_1": "",
+                "reserved_1": "test",
                 "reserved_2": ""
             },
             "intel": {
