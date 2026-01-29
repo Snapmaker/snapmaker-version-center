@@ -23,6 +23,42 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Debug Cloudflare API Token permissions
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          echo "=== Token Verify ==="
+          curl -s "https://api.cloudflare.com/client/v4/user/tokens/verify" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | jq .
+
+          echo ""
+          echo "=== Token Details (permissions) ==="
+          TOKEN_ID=$(curl -s "https://api.cloudflare.com/client/v4/user/tokens/verify" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | jq -r '.result.id')
+          echo "Token ID: $TOKEN_ID"
+
+          echo ""
+          echo "=== List Accounts ==="
+          curl -s "https://api.cloudflare.com/client/v4/accounts" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | jq .
+
+          echo ""
+          echo "=== Check Account ID ==="
+          echo "Configured ACCOUNT_ID: $CLOUDFLARE_ACCOUNT_ID"
+          curl -s "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | jq .
+
+          echo ""
+          echo "=== List Pages Projects ==="
+          curl -s "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | jq .
+
+          echo ""
+          echo "=== User Details ==="
+          curl -s "https://api.cloudflare.com/client/v4/user" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | jq '{success, errors, result: {id: .result.id, email: .result.email}}'
+
       - name: Deploy to Cloudflare Pages
         id: deploy
         uses: cloudflare/wrangler-action@v3
