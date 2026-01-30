@@ -4,7 +4,7 @@
     "data": {
         "is_full_upgrade": true,
         "is_force_upgrade": false,
-        "version": "2.2.3",
+        "version": "2.2.4",
         "release_type": "stable",
         "platform_type": "mac",
         "full": {
