@@ -1,0 +1,75 @@
+{
+  "code":200,
+  "msg": "success",
+  "data": {
+    "id": 1,
+    "name":"",
+    "tag":"",
+    "pics":["",""],
+    "top": false,
+    "createDate":"",
+    "modifiedDate":"",
+    "publishedDate":"",
+    "creator":"",
+    "profiles":[
+      {
+        "id": 1,
+        "name":"",
+        "model":"",
+        "gcode": "",
+        "pics":["",""],
+        "desc":"",
+        "partitions":[
+          {
+            "weight": 180,
+            "secs": 10090,
+            "colors": {
+              "red": 10,
+              "green": 50,
+              "blue": 100,
+              "grey": 20
+            },
+            "parts": [
+              {
+                "id": 1,
+                "name": "aaa",
+                "weight": 180,
+                "secs": 10090,
+                "colors": {
+                  "red": 10
+                }
+              },
+              {
+                "id": 2,
+                "name": "bbb",
+                "weight": 180,
+                "secs": 10090,
+                "colors": {
+                  "green": 50
+                }
+              },
+              {
+                "id": 3,
+                "name": "ccc",
+                "weight": 180,
+                "secs": 10090,
+                "colors": {
+                  "blue": 100
+                }
+              }
+              {
+                "id": 4,
+                "name": "",
+                "weight": 180,
+                "secs": 10090,
+                "colors": {
+                  "grey": 20
+                }
+              },
+            ],
+          }
+        ]
+      }
+    ]
+  }
+}

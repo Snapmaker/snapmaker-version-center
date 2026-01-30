@@ -1,0 +1,22 @@
+{
+  "code":200,
+  "msg": "success",
+  "data": {
+    "models":[
+      {
+        "id": 1,
+        "name": "aa",
+        "creator":"",
+        "publishedDate":"",
+        "pic": "",
+        "url": "https://meta-cfg.snapmaker.com/model/detail/1"
+      }
+    ],
+  },
+ "page":{
+   "page": 1,
+   "pageSize": 10,
+   "total": 30,
+   "next":"https://meta-cfg.snapmaker.com/model/page/1"
+ }
+}
