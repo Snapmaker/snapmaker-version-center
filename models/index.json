@@ -3,17 +3,17 @@
     {
       "id": 1770348523056,
       "name": "test-model-1",
-      "title": "Test Model 1",
+      "title": "Updated Test Model",
       "creator": "Snapmaker",
       "creatorAvatar": null,
       "coverImage": null,
       "status": 1,
       "isTop": false,
       "createdAt": "2026-02-06T03:28:43.056Z",
-      "updatedAt": "2026-02-06T03:28:43.056Z",
+      "updatedAt": "2026-02-06T03:29:21.016Z",
       "publishedAt": "2026-02-06T03:28:43.056Z",
       "isDelete": false
     }
   ],
-  "updatedAt": "2026-02-06T03:28:50.717Z"
+  "updatedAt": "2026-02-06T03:29:22.968Z"
 }
