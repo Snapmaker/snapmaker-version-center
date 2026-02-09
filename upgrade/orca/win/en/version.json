@@ -6,7 +6,7 @@
     "is_force_upgrade": false,
     "version": "2.2.4",
     "release_type": "stable",
-    "platform_type": "windows",
+    "platform_type": "win",
     "full": {
       "default": {
         "file_size": 106876088,
