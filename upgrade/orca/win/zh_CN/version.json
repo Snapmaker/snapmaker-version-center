@@ -1,6 +1,6 @@
 {
     "code": 200,
-    "msg": "test for upgrade snapmaker orca.",
+    "msg": "",
     "data": {
         "is_full_upgrade": true,
         "is_force_upgrade": false,
@@ -16,34 +16,7 @@
                 "reserved_1": "",
                 "reserved_2": ""
             },
-            "file_describe": "1. 新功能\
-- Snapmaker Orca 软件区分中国大陆和其他地区独立升级\
-- Snapmaker Orca 工艺热更新机制纳入\
-- Snapmaker Orca Web资源热更新机制纳入\
-- 擦除塔新增Brim chamfer的功能，提升rib擦除塔的稳固性\
-- 增加了耗材类型：Snapmaker PETG HF、Snapmaker TPU 95A HF、Generic PETG HF、Generic TPU 95A HF\
-\
-2. Bug 修复\
-- 修复了少数windows11环境无法启动Snapmaker Orca 的问题\
-- 修复了机型互相切换时工艺迁移功能失效问题\
-- 修复了使用Rib擦除塔导致生成超出床板的挤出线或空驶线的问题\
-\
-- 修复了连接机器时部分耗材同步错误的问题（在未从耗材库安装的情况下）\
-  - Snapmaker PLA Snapspeed 密度为0 导致无法发送打印的问题\
-  - Generic PETG 首层PEI床板温度为0，导致首层打印质量不良问题\
-\
-- 修复了部分场景的软件崩溃问题\
-- 修复了准备页无法选择Bambu机型的问题\
-\
-- 修复了windows端意大利语翻译不对的问题\
-- 修复部分用户因设备发现ip不对的问题导致的预打印页无法获取耗材、设备断连以及无法打印等问题\
-- 修复了账户频繁登录的问题\
-\
-3. 体验优化\
-- 床板边界螺旋抬升风险提示\
-\
-- 优化多页面登录框弹出场景\
-- 优化pc和设备在同一局域网下的监控获取效率和文件上传效率"
+            "file_describe": "1. 新功能\n- Snapmaker Orca 软件区分中国大陆和其他地区独立升级\n- Snapmaker Orca 工艺热更新机制纳入\n- Snapmaker Orca Web资源热更新机制纳入\n- 擦除塔新增Brim chamfer的功能，提升rib擦除塔的稳固性\n- 增加了耗材类型：Snapmaker PETG HF、Snapmaker TPU 95A HF、Generic PETG HF、Generic TPU 95A HF\n\n2. Bug 修复\n- 修复了少数windows11环境无法启动Snapmaker Orca 的问题\n- 修复了机型互相切换时工艺迁移功能失效问题\n- 修复了使用Rib擦除塔导致生成超出床板的挤出线或空驶线的问题\n- 修复了连接机器时部分耗材同步错误的问题（在未从耗材库安装的情况下）\n  - Snapmaker PLA Snapspeed 密度为0 导致无法发送打印的问题\n  - Generic PETG 首层PEI床板温度为0，导致首层打印质量不良问题\n- 修复了部分场景的软件崩溃问题\n- 修复了准备页无法选择Bambu机型的问题\n- 修复了windows端意大利语翻译不对的问题\n- 修复部分用户因设备发现ip不对的问题导致的预打印页无法获取耗材、设备断连以及无法打印等问题\n- 修复了账户频繁登录的问题\n\n3. 体验优化\n- 床板边界螺旋抬升风险提示\n- 优化多页面登录框弹出场景\n- 优化pc和设备在同一局域网下的监控获取效率和文件上传效率"
         }
     }
 }
