@@ -1,0 +1,28 @@
+{
+  "code": 0,
+  "msg": "OK",
+  "data": {
+    "new_version": {
+      "version": "Artisan_V2.7.3_20240716",
+      "url": "https://s3.us-west-2.amazonaws.com/snapmaker.com/download/firmware/Artisan_V2.7.3_20240716.bin",
+      "change_log": {
+        "new_feature": [
+          "● 无"
+        ],
+        "bug_fixed": [
+          "● 修正了 2W 红外激光模组"如何使用对焦杆"页面上对焦杆刻度的描述",
+          "    * 现在描述为"对齐 Focus"而不是"focus 0"",
+          "● 修复了 2W 红外激光模组在初始化时会自动发射的问题",
+          "● 修复了模组固件无法降级的问题"
+        ],
+        "improvement": [
+          "● 2W 红外激光模组待机时，低速运行的内部风扇将被关闭以降低噪音"
+        ]
+      },
+      "package_size": 144830464,
+      "summary": [
+        "V2.7.3 专注于 Bug 修复和改进"
+      ]
+    }
+  }
+}

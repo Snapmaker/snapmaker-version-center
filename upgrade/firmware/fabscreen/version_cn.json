@@ -1,0 +1,28 @@
+{
+  "code": 0,
+  "msg": "OK",
+  "data": {
+    "new_version": {
+      "version": "Snapmaker2_V1.20.3_20240716",
+      "url": "https://s3.us-west-2.amazonaws.com/snapmaker.com/download/firmware/Snapmaker2_V1.20.3.bin",
+      "change_log": {
+        "new_feature": [
+          "● 无"
+        ],
+        "bug_fixed": [
+          "● 修复了在使用 20W/40W 激光模组或 2W 红外激光模组加工时，空气净化器"自动开启"选项未被激活的问题",
+          "● 修复了 2W 红外激光模组在初始化时会自动发射的问题"
+        ],
+        "improvement": [
+          "● 2W 红外激光模组待机时，低速运行的内部风扇将被关闭以降低噪音"
+        ]
+      },
+      "package_size": 77996032,
+      "summary": [
+        "v1.20.3 专注于",
+        "Bug 修复和改进",
+        "等"
+      ]
+    }
+  }
+}
