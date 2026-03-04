@@ -3,23 +3,23 @@
   "msg": "OK",
   "data": {
     "new_version": {
-      "version": "Snapmaker2_V1.20.3_20240716",
-      "url": "https://s3.us-west-2.amazonaws.com/snapmaker.com/download/firmware/Snapmaker2_V1.20.3.bin",
+      "version": "Snapmaker2_V1.21.0_20260213",
+      "url": "https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.cn/static/support/%E5%9B%BA%E4%BB%B6/Snapmaker2_V1.21.0.bin",
       "change_log": {
         "new_feature": [
-          "● 无"
+          "● Added support for direct network connection between the machine and Snapmaker Orca.",
+          "● Added a Repeat Job button on the touchscreen."
         ],
         "bug_fixed": [
-          "● 修复了在使用 20W/40W 激光模组或 2W 红外激光模组加工时，空气净化器"自动开启"选项未被激活的问题",
-          "● 修复了 2W 红外激光模组在初始化时会自动发射的问题"
+           "● 无"
         ],
         "improvement": [
-          "● 2W 红外激光模组待机时，低速运行的内部风扇将被关闭以降低噪音"
+           "● 无"
         ]
       },
-      "package_size": 77996032,
+      "package_size": 78004224,
       "summary": [
-        "v1.20.3 专注于",
+        "v1.21.0 专注于",
         "Bug 修复和改进",
         "等"
       ]

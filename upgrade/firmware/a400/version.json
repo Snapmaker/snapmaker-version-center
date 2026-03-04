@@ -3,25 +3,23 @@
   "msg": "OK",
   "data": {
     "new_version": {
-      "version": "Artisan_V2.7.3_20240716",
-      "url": "https://s3.us-west-2.amazonaws.com/snapmaker.com/download/firmware/Artisan_V2.7.3_20240716.bin",
+      "version": "Artisan_V2.8.0_20260210",
+      "url": "https://s3.us-west-2.amazonaws.com/snapmaker.com/download/firmware/Artisan_V2.8.0_20260210.bin",
       "change_log": {
         "new_feature": [
-          "● N/A"
+          "● Added support for direct network connection between the machine and Snapmaker Orca.",
+          "● Added a Repeat Job button on the touchscreen."
         ],
         "bug_fixed": [
-          "● Revised the description of focus lever scale on \"How to use the Focus Lever\" page of 2W Infrared Laser Module",
-          "    * Now it is described as \"aligned with Focus\" instead of \"focus 0\"",
-          "● Fixed a bug that 2W Infrared Laser Module would automatically emit upon initialization",
-          "● Fixed a bug that the module firmware could not be downgraded"
+          "● N/A"
         ],
         "improvement": [
-          "● When 2W Infrared Laser Module is in stand-by, the inner fan running at low speed will be turned off to reduce noise"
+          "● N/A"
         ]
       },
-      "package_size": 144830464,
+      "package_size": 144859136,
       "summary": [
-        "V2.7.3 focus on bugfixes and improvements"
+        "V2.8.0 focus on Snapmaker Orca Direct Print Support and Repeat Job for Touchscreen"
       ]
     }
   }

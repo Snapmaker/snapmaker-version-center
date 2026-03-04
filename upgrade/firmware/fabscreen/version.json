@@ -3,24 +3,25 @@
   "msg": "OK",
   "data": {
     "new_version": {
-      "version": "Snapmaker2_V1.20.3_20240716",
-      "url": "https://s3.us-west-2.amazonaws.com/snapmaker.com/download/firmware/Snapmaker2_V1.20.3.bin",
+      "version": "Snapmaker2_V1.21.0_20260213",
+      "url": "https://s3.us-west-2.amazonaws.com/snapmaker.com/download/firmware/Snapmaker2_V1.21.0.bin",
       "change_log": {
         "new_feature": [
-          "● N/A"
+          "● Added support for direct network connection between the machine and Snapmaker Orca.",
+          "● Added a Repeat Job button on the touchscreen."
         ],
         "bug_fixed": [
-          "● Fixed a bug that the Air Purifier \"Auto Turn On\" option was not activated during machining of 20W/40W Laser Module or 2W Infrared Laser Module",
-          "● Fixed a bug that 2W Infrared Laser Module would automatically emit upon initialization"
+          "● N/A"
         ],
         "improvement": [
-          "● When 2W Infrared Laser Module is in stand-by, the inner fan running at low speed will be turned off to reduce noise"
+          "● N/A"
         ]
       },
-      "package_size": 77996032,
+      "package_size": 78004224,
       "summary": [
-        "v1.20.3 focus on",
-        "bugfixes and improvements",
+        "v1.21.0 focus on",
+        "Snapmaker Orca Direct Print Support",
+        "Repeat Job for Touchscreen",
         "and more"
       ]
     }
