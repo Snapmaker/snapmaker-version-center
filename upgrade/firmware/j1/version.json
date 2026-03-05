@@ -1,0 +1,27 @@
+{
+  "code": 0,
+  "msg": "OK",
+  "data": {
+    "new_version": {
+      "version": "J1_V2.8.0_20251217",
+      "url": "https://s3.us-west-2.amazonaws.com/snapmaker.com/download/firmware/J1_V2.8.0_20251217.bin",
+      "change_log": {
+        "new_feature": [
+          "● Added Direct Machine Connection support for Snapmaker Orca."
+        ],
+        "bug_fixed": [
+          "● N/A"
+        ],
+        "improvement": [
+          "● N/A"
+        ]
+      },
+      "package_size": 47718400,
+      "summary": [
+        "v2.8.0 focus on new features",
+        "Snapmaker Orca Direct Print Support",
+        "and more"
+      ]
+    }
+  }
+}

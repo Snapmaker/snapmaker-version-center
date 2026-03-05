@@ -1,0 +1,26 @@
+{
+  "code": 0,
+  "msg": "OK",
+  "data": {
+    "new_version": {
+      "version": "Artisan_V2.8.0_20260210",
+      "url": "https://s3.us-west-2.amazonaws.com/snapmaker.com/download/firmware/Artisan_V2.8.0_20260210.bin",
+      "change_log": {
+        "new_feature": [
+          "● Added support for direct network connection between the machine and Snapmaker Orca.",
+          "● Added a Repeat Job button on the touchscreen."
+        ],
+        "bug_fixed": [
+          "● N/A"
+        ],
+        "improvement": [
+          "● N/A"
+        ]
+      },
+      "package_size": 144859136,
+      "summary": [
+        "V2.8.0 focus on Snapmaker Orca Direct Print Support and Repeat Job for Touchscreen"
+      ]
+    }
+  }
+}
