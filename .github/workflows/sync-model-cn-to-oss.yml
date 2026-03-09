@@ -205,7 +205,7 @@ jobs:
           mkdir -p temp_oss/model
 
           # 将 model/cn/ 的内容复制到 temp_oss/model/（去掉 cn 层级）
-          # OSS 上的路径为 model/list.html、model/detail/N.html（不含 cn/）
+          # OSS 上的路径为 model/list、model/detail/N（不含 cn/，不含 .html）
           if [ -d "model/cn" ] && [ "$(ls -A model/cn 2>/dev/null)" ]; then
             cp -a model/cn/* temp_oss/model/
             echo "Copied model/cn/* to temp_oss/model/"
@@ -213,6 +213,11 @@ jobs:
             echo "ERROR: model/cn directory is empty or not found"
             exit 1
           fi
+
+          # 去掉 .html 扩展名：list.html -> list, detail/8.html -> detail/8
+          find temp_oss -type f -name "*.html" | while read f; do
+            mv "$f" "${f%.html}"
+          done
 
           echo "Listing temp_oss contents:"
           find temp_oss -type f
@@ -222,12 +227,12 @@ jobs:
           # 定义需要替换的文件扩展名模式
           EXTENSIONS="png|jpg|jpeg|gif|webp|bmp|svg|ico|3mf|stl|gcode|snap3dp|snapcnc|snaplaser|zip|tar|gz|tgz|rar|7z|pdf|mp3|mp4|wav|avi|mov|exe|bin|apk|dmg|deb|rpm|msi|iso"
 
-          find temp_oss -type f -name "*.html" | while read html_file; do
+          find temp_oss -type f | while read html_file; do
             # 1. 替换资源文件 URL: https://xxx/path/file.ext -> https://{CDN_DOMAIN}/download/path/file.ext
             sed -i -E "s#https://[a-zA-Z0-9.-]+/([^\"]+\.($EXTENSIONS))#https://$CDN_DOMAIN/download/\1#gi" "$html_file"
 
-            # 2. 替换 detail url 字段: https://pre.api.snapmaker.com/api/model/detail/N -> https://{CDN_DOMAIN}/model/detail/N.html
-            sed -i -E "s#https://[a-zA-Z0-9.-]+/api/model/detail/([0-9]+)#https://$CDN_DOMAIN/model/detail/\1.html#g" "$html_file"
+            # 2. 替换 detail url 字段: https://pre.api.snapmaker.com/api/model/detail/N -> https://{CDN_DOMAIN}/model/detail/N
+            sed -i -E "s#https://[a-zA-Z0-9.-]+/api/model/detail/([0-9]+)#https://$CDN_DOMAIN/model/detail/\1#g" "$html_file"
 
             # 3. snapmaker.com -> snapmaker.cn
             sed -i 's/snapmaker\.com/snapmaker.cn/g' "$html_file"
@@ -244,9 +249,13 @@ jobs:
           echo "Syncing model files to OSS..."
 
           if [ -d "temp_oss/model" ] && [ "$(ls -A temp_oss/model 2>/dev/null)" ]; then
-            echo "Uploading model files..."
-            ossutil sync temp_oss/model/ oss://$OSS_BUCKET/model/ --update \
-              --meta "Cache-Control:public, max-age=3600"
+            find temp_oss/model -type f | while read file; do
+              rel_path=${file#temp_oss/}
+              echo "Uploading: $rel_path"
+              ossutil cp -f "$file" "oss://$OSS_BUCKET/$rel_path" \
+                --meta "Content-Type:application/json" \
+                --meta "Cache-Control:public, max-age=3600"
+            done
             echo "Model files synced successfully"
           else
             echo "No model files to sync"
