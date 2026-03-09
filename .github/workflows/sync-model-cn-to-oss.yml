@@ -253,8 +253,7 @@ jobs:
               rel_path=${file#temp_oss/}
               echo "Uploading: $rel_path"
               ossutil cp -f "$file" "oss://$OSS_BUCKET/$rel_path" \
-                --meta "Content-Type:application/json" \
-                --meta "Cache-Control:public, max-age=3600"
+               --meta "Content-Type:application/json#Cache-Control:public, max-age=3600"
             done
             echo "Model files synced successfully"
           else
