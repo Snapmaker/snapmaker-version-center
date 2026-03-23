@@ -122,11 +122,8 @@ jobs:
 
             # 只下载有文件后缀的资源
             if ! echo "$url_main" | grep -qiE "$DOWNLOAD_EXTENSIONS"; then
-              echo "SKIP (no file extension): $url"
               continue
             fi
-
-            echo "Processing: $url"
 
             # 从 URL 提取路径（去掉协议和域名）
             url_without_protocol=$(echo "$url" | sed 's|https\?://||')
@@ -141,60 +138,24 @@ jobs:
             mkdir -p "$target_dir"
 
             if wget -q --timeout=60 --tries=3 -O "$target_file" "$url"; then
-              # 计算 MD5
               downloaded_md5=$(md5sum "$target_file" | awk '{print $1}' | tr '[:lower:]' '[:upper:]')
-              echo "Downloaded: download/$url_path (MD5: $downloaded_md5)"
-
-              # 检查 OSS 上是否已存在，比较 x-oss-meta-md5
-              echo "Checking OSS for: download/$url_path"
               oss_info=$(ossutil stat "$oss_path" 2>/dev/null || true)
 
               if [ -n "$oss_info" ]; then
                 oss_meta_md5=$(echo "$oss_info" | grep -i "X-Oss-Meta-Md5" | awk -F': ' '{print $2}' | tr -d ' ' | tr '[:lower:]' '[:upper:]')
-
-                if [ -n "$oss_meta_md5" ]; then
-                  if [ "$downloaded_md5" = "$oss_meta_md5" ]; then
-                    echo "SKIP: download/$url_path (x-oss-meta-md5 match: $oss_meta_md5)"
-                    rm -f "$target_file"
-                    continue
-                  else
-                    echo "UPDATE: download/$url_path (OSS meta-md5: $oss_meta_md5, New MD5: $downloaded_md5)"
-                  fi
-                else
-                  echo "UPDATE: download/$url_path (No x-oss-meta-md5 found, will re-upload with meta)"
+                if [ -n "$oss_meta_md5" ] && [ "$downloaded_md5" = "$oss_meta_md5" ]; then
+                  rm -f "$target_file"
+                  continue
                 fi
-              else
-                echo "NEW: download/$url_path"
               fi
 
-              # 记录文件用于上传
               echo "download/$url_path" >> files_to_sync.txt
             else
-              echo "ERROR: Failed to download $url"
               echo "DOWNLOAD_FAILED: $url" >> sync_errors.txt
             fi
           done || true
 
-          # 下载统计
-          echo "========================================="
-          echo "Download Summary:"
-          if [ -f files_to_sync.txt ] && [ -s files_to_sync.txt ]; then
-            echo "Files to sync: $(wc -l < files_to_sync.txt)"
-            cat files_to_sync.txt
-          else
-            echo "No new files to sync"
-          fi
-
-          if [ -f sync_errors.txt ] && [ -s sync_errors.txt ]; then
-            echo ""
-            echo "❌ ERRORS ($(wc -l < sync_errors.txt)):"
-            cat sync_errors.txt
-          else
-            echo "✅ No errors"
-          fi
-          echo "========================================="
-
-      - name: Create modified copies for OSS upload
+      - name: Create modified copies and Inject Missing JSON Data
         env:
           CDN_DOMAIN: ${{ secrets.CDN_DOMAIN }}
         run: |
@@ -204,11 +165,8 @@ jobs:
           rm -rf temp_oss
           mkdir -p temp_oss/model
 
-          # 将 model/cn/ 的内容复制到 temp_oss/model/（去掉 cn 层级）
-          # OSS 上的路径为 model/list、model/detail/N（不含 cn/，不含 .html）
           if [ -d "model/cn" ] && [ "$(ls -A model/cn 2>/dev/null)" ]; then
             cp -a model/cn/* temp_oss/model/
-            echo "Copied model/cn/* to temp_oss/model/"
           else
             echo "ERROR: model/cn directory is empty or not found"
             exit 1
@@ -219,26 +177,98 @@ jobs:
             mv "$f" "${f%.html}"
           done
 
-          echo "Listing temp_oss contents:"
-          find temp_oss -type f
-
-          echo "Applying URL replacements..."
-
-          # 定义需要替换的文件扩展名模式
+          echo "Applying URL replacements with sed..."
           EXTENSIONS="png|jpg|jpeg|gif|webp|bmp|svg|ico|3mf|stl|gcode|snap3dp|snapcnc|snaplaser|zip|tar|gz|tgz|rar|7z|pdf|mp3|mp4|wav|avi|mov|exe|bin|apk|dmg|deb|rpm|msi|iso"
-
           find temp_oss -type f | while read html_file; do
-            # 1. 替换资源文件 URL: https://xxx/path/file.ext -> https://{CDN_DOMAIN}/download/path/file.ext
             sed -i -E "s#https://[a-zA-Z0-9.-]+/([^\"]+\.($EXTENSIONS))#https://$CDN_DOMAIN/download/\1#gi" "$html_file"
-
-            # 2. 替换 detail url 字段: https://pre.api.snapmaker.com/api/model/detail/N -> https://{CDN_DOMAIN}/model/detail/N
             sed -i -E "s#https://[a-zA-Z0-9.-]+/api/model/detail/([0-9]+)#https://$CDN_DOMAIN/model/detail/\1#g" "$html_file"
-
-            # 3. snapmaker.com -> snapmaker.cn
             sed -i 's/snapmaker\.com/snapmaker.cn/g' "$html_file"
           done
 
-          echo "URL replacement completed"
+          echo "Running Python script to inject missing images into empty JSON arrays..."
+          cat << 'EOF' > inject_images.py
+          import os
+          import json
+
+          cdn_domain = os.environ.get('CDN_DOMAIN', '')
+          temp_oss_dir = 'temp_oss'
+          downloads_dir = 'downloads/download'
+
+          image_map = {}
+          # 1. 扫描下载的图片，建立映射关系: image_map[model_id][partition_id] = [CDN URLs]
+          if os.path.exists(downloads_dir):
+              for root, dirs, files in os.walk(downloads_dir):
+                  for file in files:
+                      if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+                          full_path = os.path.join(root, file)
+                          rel_path = os.path.relpath(full_path, 'downloads')
+                          parts = rel_path.replace('\\', '/').split('/')
+
+                          try:
+                              if 'images' in parts:
+                                  img_idx = parts.index('images')
+                                  model_id = parts[img_idx + 1]
+                                  part_folder = parts[img_idx + 2]
+                                  if part_folder.startswith('partition_'):
+                                      part_id = int(part_folder.split('_')[1])
+
+                                      if model_id not in image_map:
+                                          image_map[model_id] = {}
+                                      if part_id not in image_map[model_id]:
+                                          image_map[model_id][part_id] = []
+
+                                      cdn_url = f"https://{cdn_domain}/{rel_path}"
+                                      image_map[model_id][part_id].append(cdn_url)
+                          except Exception as e:
+                              pass
+
+          # 2. 递归查找并注入图片到空的 pics 数组中
+          def inject_images_recursive(obj, model_id):
+              modified = False
+              if isinstance(obj, dict):
+                  if 'partitions' in obj and isinstance(obj['partitions'], list):
+                      for partition in obj['partitions']:
+                          if isinstance(partition, dict):
+                              part_id = partition.get('id')
+                              # 如果找到了 partition，且 pics 为空，则进行注入
+                              if part_id is not None and not partition.get('pics'):
+                                  if model_id in image_map and part_id in image_map[model_id]:
+                                      partition['pics'] = sorted(image_map[model_id][part_id])
+                                      modified = True
+                  # 继续向下递归遍历所有字典的键值
+                  for k, v in obj.items():
+                      if isinstance(v, (dict, list)):
+                          if inject_images_recursive(v, model_id):
+                              modified = True
+              elif isinstance(obj, list):
+                  # 递归遍历列表中的元素
+                  for item in obj:
+                      if isinstance(item, (dict, list)):
+                          if inject_images_recursive(item, model_id):
+                              modified = True
+              return modified
+
+          # 3. 处理所有的 JSON (原本是 .html) 文件
+          detail_dir = os.path.join(temp_oss_dir, 'model', 'detail')
+          if os.path.exists(detail_dir):
+              for file in os.listdir(detail_dir):
+                  file_path = os.path.join(detail_dir, file)
+                  model_id = file # 文件名即为 Model ID
+                  try:
+                      with open(file_path, 'r', encoding='utf-8') as f:
+                          data = json.load(f)
+
+                      if inject_images_recursive(data, model_id):
+                          # 如果有修改，将数据重新写回文件（保持紧凑格式）
+                          with open(file_path, 'w', encoding='utf-8') as f:
+                              json.dump(data, f, ensure_ascii=False, separators=(',', ':'))
+                          print(f"  -> [成功] 已为 Model ID {model_id} 的空分区注入了图片数据")
+                  except Exception as e:
+                      pass
+          EOF
+
+          python3 inject_images.py
+          rm inject_images.py
 
       - name: Sync model files to OSS
         env:
@@ -251,7 +281,6 @@ jobs:
           if [ -d "temp_oss/model" ] && [ "$(ls -A temp_oss/model 2>/dev/null)" ]; then
             find temp_oss/model -type f | while read file; do
               rel_path=${file#temp_oss/}
-              echo "Uploading: $rel_path"
               ossutil cp -f "$file" "oss://$OSS_BUCKET/$rel_path" \
                --meta "Content-Type:application/json#Cache-Control:public, max-age=3600#Content-Disposition:inline"
             done
@@ -266,61 +295,19 @@ jobs:
         run: |
           set -euo pipefail
 
-          # 初始化验证结果文件
           > upload_verify_errors.txt
 
-          # 检查是否有需要同步的文件
           if [ -d "downloads" ] && [ "$(ls -A downloads 2>/dev/null)" ]; then
             echo "Syncing downloaded resource files to OSS..."
-
-            # 逐个同步文件，保持路径结构
             find downloads/ -type f | while read file; do
-              # 获取相对路径
               rel_path=${file#downloads/}
-
-              # 计算本地文件 MD5
               local_md5=$(md5sum "$file" | awk '{print $1}' | tr '[:lower:]' '[:upper:]')
 
-              echo "Uploading: $rel_path (Local MD5: $local_md5)"
-              # 上传时附带 x-oss-meta-md5 元数据
               ossutil cp -f "$file" "oss://$OSS_BUCKET/$rel_path" \
                 --meta "Cache-Control:public, max-age=86400" \
                 --meta "x-oss-meta-md5:$local_md5"
-
-              # 上传后验证：获取 OSS 上文件的 x-oss-meta-md5
-              oss_info=$(ossutil stat "oss://$OSS_BUCKET/$rel_path" 2>/dev/null || true)
-              if [ -n "$oss_info" ]; then
-                oss_meta_md5=$(echo "$oss_info" | grep -i "X-Oss-Meta-Md5" | awk -F': ' '{print $2}' | tr -d ' ' | tr '[:lower:]' '[:upper:]')
-
-                if [ "$local_md5" = "$oss_meta_md5" ]; then
-                  echo "  ✅ VERIFIED: x-oss-meta-md5 matches ($oss_meta_md5)"
-                else
-                  echo "  ❌ MISMATCH: Local MD5=$local_md5, OSS x-oss-meta-md5=$oss_meta_md5"
-                  echo "MD5_VERIFY_FAILED: $rel_path (Local=$local_md5, OSS meta=$oss_meta_md5)" >> upload_verify_errors.txt
-                fi
-              else
-                echo "  ⚠️  WARNING: Could not verify OSS file after upload"
-                echo "VERIFY_FAILED: $rel_path (Could not get OSS file info)" >> upload_verify_errors.txt
-              fi
             done
-
-            echo ""
-            echo "========================================="
-            echo "Upload Verification Summary:"
-            echo "========================================="
-            if [ -f upload_verify_errors.txt ] && [ -s upload_verify_errors.txt ]; then
-              echo "❌ VERIFICATION ERRORS ($(wc -l < upload_verify_errors.txt)):"
-              cat upload_verify_errors.txt
-              echo ""
-              echo "⚠️  WARNING: Some files have MD5 mismatch!"
-            else
-              echo "✅ All uploaded files verified successfully"
-            fi
-            echo "========================================="
-
             echo "Resource files sync completed"
-          else
-            echo "No new resource files to sync (all files already up-to-date)"
           fi
 
       - name: Cleanup temporary files
@@ -332,7 +319,6 @@ jobs:
           rm -f files_to_sync.txt
           rm -f sync_errors.txt
           rm -f upload_verify_errors.txt
-          echo "Cleanup completed"
 
       - name: Setup aliyun-cli for CDN
         if: success()
@@ -345,9 +331,6 @@ jobs:
           sudo mv aliyun /usr/local/bin/
           rm -f aliyun-cli-linux-latest-amd64.tgz
 
-          echo "Verifying aliyun-cli installation..."
-          aliyun version
-
       - name: Refresh CDN cache
         if: success()
         env:
@@ -357,18 +340,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "========================================="
-          echo "Refreshing CDN cache..."
-          echo "CDN Domain: $CDN_DOMAIN"
-          echo "========================================="
-
-          # 检查 CDN 密钥是否配置
           if [ -z "$CDN_ACCESS_KEY_ID" ] || [ -z "$CDN_ACCESS_KEY_SECRET" ]; then
-            echo "WARNING: CDN credentials not configured, skipping CDN refresh"
             exit 0
           fi
 
-          # 配置 aliyun-cli
           aliyun configure set \
             --profile cdn-profile \
             --mode AK \
@@ -376,40 +351,15 @@ jobs:
             --access-key-id "$CDN_ACCESS_KEY_ID" \
             --access-key-secret "$CDN_ACCESS_KEY_SECRET"
 
-          # 刷新目录（model/, download/）
           REFRESH_PATHS="https://$CDN_DOMAIN/model/
           https://$CDN_DOMAIN/download/"
 
-          echo "Refreshing directories:"
-          echo "$REFRESH_PATHS"
-
-          # 调用 CDN 刷新 API（刷新目录）
-          RESULT=$(aliyun --profile cdn-profile cdn RefreshObjectCaches \
+          aliyun --profile cdn-profile cdn RefreshObjectCaches \
             --ObjectPath "$REFRESH_PATHS" \
-            --ObjectType Directory 2>&1) || true
-
-          echo "CDN Refresh API Response:"
-          echo "$RESULT"
-
-          # 检查是否成功
-          if echo "$RESULT" | grep -q "RefreshTaskId"; then
-            TASK_ID=$(echo "$RESULT" | grep -o '"RefreshTaskId":"[^"]*"' | cut -d'"' -f4 || true)
-            echo "✅ CDN refresh task submitted successfully!"
-            echo "Task ID: $TASK_ID"
-          else
-            echo "⚠️  CDN refresh may have failed, please check manually"
-          fi
-
-          echo "========================================="
+            --ObjectType Directory 2>&1 || true
 
       - name: Job summary
         if: always()
         run: |
-          echo "========================================="
-          echo "Job Summary"
-          echo "========================================="
           echo "Scope: model/cn -> OSS model/"
           echo "Environment: ${ACT_ENV:-GitHub Actions}"
-          echo "OSS Bucket: ${{ secrets.OSS_BUCKET }}"
-          echo "Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
-          echo "========================================="
