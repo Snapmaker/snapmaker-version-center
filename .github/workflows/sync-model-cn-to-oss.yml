@@ -237,16 +237,14 @@ jobs:
           echo "MODEL_UPLOAD_COUNT=$MODEL_UPLOAD_COUNT" >> "$GITHUB_ENV"
           echo "MODEL_DELETE_COUNT=$MODEL_DELETE_COUNT" >> "$GITHUB_ENV"
 
-      - name: Sync downloaded resource files to OSS and delete stale files
+      - name: Sync downloaded resource files to OSS
         env:
           OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
         run: |
           set -euo pipefail
 
           RESOURCE_UPLOAD_COUNT=0
-          RESOURCE_DELETE_COUNT=0
 
-          # 上传本次有变化的资源文件
           if [ -d "downloads" ] && [ -n "$(ls -A downloads 2>/dev/null)" ]; then
             echo "Syncing downloaded resource files to OSS..."
             while IFS= read -r -d '' file; do
@@ -257,36 +255,16 @@ jobs:
                 --meta "x-oss-meta-md5:$local_md5"
               RESOURCE_UPLOAD_COUNT=$((RESOURCE_UPLOAD_COUNT + 1))
             done < <(find downloads/ -type f -print0)
+            echo "资源文件上传完成: $RESOURCE_UPLOAD_COUNT 个"
           fi
 
-          # 删除 OSS download/ 上不再被任何 HTML 引用的文件
-          if [ -f "expected_download_keys.txt" ]; then
-            echo "Checking for stale resource files on OSS..."
-            OSS_DOWNLOAD_KEYS="oss_download_keys.txt"
-            ossutil ls "oss://$OSS_BUCKET/download/" -s 2>/dev/null \
-              | grep -v '^$' | sed "s|oss://$OSS_BUCKET/||" > "$OSS_DOWNLOAD_KEYS" || true
-
-            while IFS= read -r oss_key; do
-              [ -z "$oss_key" ] && continue
-              if ! grep -qxF "$oss_key" "expected_download_keys.txt"; then
-                echo "  [删除] oss://$OSS_BUCKET/$oss_key"
-                ossutil rm -f "oss://$OSS_BUCKET/$oss_key"
-                RESOURCE_DELETE_COUNT=$((RESOURCE_DELETE_COUNT + 1))
-              fi
-            done < "$OSS_DOWNLOAD_KEYS"
-
-            rm -f "$OSS_DOWNLOAD_KEYS"
-          fi
-
-          echo "资源文件同步完成: 上传 $RESOURCE_UPLOAD_COUNT 个, 删除 $RESOURCE_DELETE_COUNT 个"
           echo "RESOURCE_UPLOAD_COUNT=$RESOURCE_UPLOAD_COUNT" >> "$GITHUB_ENV"
-          echo "RESOURCE_DELETE_COUNT=$RESOURCE_DELETE_COUNT" >> "$GITHUB_ENV"
 
       - name: Cleanup temporary files
         if: always()
         run: |
           rm -rf temp_oss downloads
-          rm -f sync_errors.txt expected_download_keys.txt
+          rm -f sync_errors.txt expected_download_keys.txt oss_model_keys.txt local_model_keys.txt
 
       - name: Setup aliyun-cli for CDN
         if: success()
@@ -334,7 +312,7 @@ jobs:
           echo "========================================="
           echo "资源文件: 下载 ${DOWNLOAD_COUNT:-0} 个, 跳过 ${SKIP_COUNT:-0} 个, 失败 ${FAIL_COUNT:-0} 个"
           echo "Model 文件: 上传 ${MODEL_UPLOAD_COUNT:-0} 个, 删除 ${MODEL_DELETE_COUNT:-0} 个"
-          echo "资源文件: 上传 ${RESOURCE_UPLOAD_COUNT:-0} 个, 删除 ${RESOURCE_DELETE_COUNT:-0} 个"
+          echo "资源文件上传: ${RESOURCE_UPLOAD_COUNT:-0} 个"
           echo "环境: ${ACT_ENV:-GitHub Actions}"
 
           if [ -f sync_errors.txt ] && [ -s sync_errors.txt ]; then
