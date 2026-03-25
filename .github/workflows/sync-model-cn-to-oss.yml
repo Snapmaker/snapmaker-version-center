@@ -1,11 +1,6 @@
 name: Sync Model CN to Aliyun OSS
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'model/cn/**'
   workflow_dispatch:
     inputs:
       manual_run:
@@ -40,34 +35,21 @@ jobs:
           set -euo pipefail
 
           echo "Validating required secrets..."
-          if [ -z "$OSS_ACCESS_KEY_ID" ]; then
-            echo "ERROR: OSS_ACCESS_KEY_ID is not set"
-            exit 1
-          fi
-          if [ -z "$OSS_ACCESS_KEY_SECRET" ]; then
-            echo "ERROR: OSS_ACCESS_KEY_SECRET is not set"
-            exit 1
-          fi
-          if [ -z "$OSS_ENDPOINT" ]; then
-            echo "ERROR: OSS_ENDPOINT is not set"
-            exit 1
-          fi
-          if [ -z "$OSS_BUCKET" ]; then
-            echo "ERROR: OSS_BUCKET is not set"
-            exit 1
-          fi
+          for var in OSS_ACCESS_KEY_ID OSS_ACCESS_KEY_SECRET OSS_ENDPOINT OSS_BUCKET; do
+            if [ -z "${!var}" ]; then
+              echo "ERROR: $var is not set"
+              exit 1
+            fi
+          done
           echo "All required secrets are present"
 
       - name: Setup ossutil
         run: |
           set -euo pipefail
 
-          echo "Downloading ossutil..."
           wget -q https://gosspublic.alicdn.com/ossutil/1.7.15/ossutil64
           chmod +x ossutil64
           sudo mv ossutil64 /usr/local/bin/ossutil
-
-          echo "Verifying ossutil installation..."
           ossutil --version
 
       - name: Configure ossutil
@@ -78,254 +60,239 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "Configuring ossutil..."
           ossutil config -e $OSS_ENDPOINT -i $OSS_ACCESS_KEY_ID -k $OSS_ACCESS_KEY_SECRET
-
-          echo "Testing OSS connection..."
           ossutil ls oss:// || echo "Warning: Could not list OSS buckets"
 
-      - name: Download resource files from model/cn
+      - name: Extract resource URLs and download changed files
         env:
           OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
         run: |
-          set -eu
+          set -euo pipefail
 
           mkdir -p downloads
-          > files_to_sync.txt
-          > sync_errors.txt
+
+          DOWNLOAD_COUNT=0
+          SKIP_COUNT=0
+          FAIL_COUNT=0
 
           echo "========================================="
           echo "Starting resource file download process"
           echo "========================================="
 
-          # 定义需要下载的文件后缀（正则模式）
           DOWNLOAD_EXTENSIONS='\.(png|jpg|jpeg|gif|webp|bmp|svg|ico|3mf|stl|gcode|snap3dp|snapcnc|snaplaser|zip|tar|gz|tgz|rar|7z|pdf|mp3|mp4|wav|avi|mov|exe|bin|apk|dmg|deb|rpm|msi|iso)$'
 
-          # 从 model/cn/ 下所有 .html 文件中提取 URL
-          ALL_URLS_FILE=$(mktemp)
-          trap "rm -f $ALL_URLS_FILE" EXIT
+          # 提取所有 HTML 里的 URL，持久化到文件供后续删除步骤使用
+          ALL_URLS_FILE="all_resource_urls.txt"
+          > "$ALL_URLS_FILE"
 
-          for html_file in $(find model/cn/ -name "*.html" -type f 2>/dev/null); do
+          while IFS= read -r -d '' html_file; do
             echo "Extracting URLs from: $html_file"
             grep -oE 'https?://[^"'\''[:space:]<>]+' "$html_file" 2>/dev/null >> "$ALL_URLS_FILE" || true
-          done
+          done < <(find model/cn/ -name "*.html" -type f -print0 2>/dev/null)
 
-          # 去重并处理每个 URL
-          sort -u "$ALL_URLS_FILE" | while read -r url; do
+          # 去重后处理
+          SORTED_URLS_FILE="sorted_resource_urls.txt"
+          sort -u "$ALL_URLS_FILE" > "$SORTED_URLS_FILE"
+
+          # 构建"应有的 OSS key"列表，供删除步骤使用
+          EXPECTED_KEYS_FILE="expected_download_keys.txt"
+          > "$EXPECTED_KEYS_FILE"
+
+          while IFS= read -r url; do
             [ -z "$url" ] && continue
 
-            # 清理 URL（移除尾部标点）
             url=$(echo "$url" | sed 's/[,;:]*$//')
-
-            # 提取 URL 主体部分（去掉查询参数），用于扩展名检查
             url_main=$(echo "$url" | cut -d'?' -f1)
 
-            # 只下载有文件后缀的资源
             if ! echo "$url_main" | grep -qiE "$DOWNLOAD_EXTENSIONS"; then
               continue
             fi
 
-            # 从 URL 提取路径（去掉协议和域名）
             url_without_protocol=$(echo "$url" | sed 's|https\?://||')
             url_path=$(echo "$url_without_protocol" | cut -d'/' -f2-)
-
-            # OSS 路径：download/{path}（不包含域名）
             oss_path="oss://$OSS_BUCKET/download/$url_path"
-
-            # 下载文件到 downloads/download/{path}
             target_dir="downloads/download/$(dirname "$url_path")"
             target_file="downloads/download/$url_path"
+
+            # 记录应有的 key
+            echo "download/$url_path" >> "$EXPECTED_KEYS_FILE"
+
             mkdir -p "$target_dir"
+
+            # 先查 OSS 是否已存在
+            oss_info=$(ossutil stat "$oss_path" 2>/dev/null || true)
 
             if wget -q --timeout=60 --tries=3 -O "$target_file" "$url"; then
               downloaded_md5=$(md5sum "$target_file" | awk '{print $1}' | tr '[:lower:]' '[:upper:]')
-              oss_info=$(ossutil stat "$oss_path" 2>/dev/null || true)
 
               if [ -n "$oss_info" ]; then
                 oss_meta_md5=$(echo "$oss_info" | grep -i "X-Oss-Meta-Md5" | awk -F': ' '{print $2}' | tr -d ' ' | tr '[:lower:]' '[:upper:]')
                 if [ -n "$oss_meta_md5" ] && [ "$downloaded_md5" = "$oss_meta_md5" ]; then
                   rm -f "$target_file"
+                  SKIP_COUNT=$((SKIP_COUNT + 1))
+                  echo "  [跳过] $oss_path (MD5 未变化)"
                   continue
                 fi
               fi
 
-              echo "download/$url_path" >> files_to_sync.txt
+              DOWNLOAD_COUNT=$((DOWNLOAD_COUNT + 1))
             else
               echo "DOWNLOAD_FAILED: $url" >> sync_errors.txt
+              rm -f "$target_file"
+              FAIL_COUNT=$((FAIL_COUNT + 1))
+              echo "  [失败] 下载失败: $url"
             fi
-          done || true
+          done < "$SORTED_URLS_FILE"
 
-      - name: Create modified copies and Inject Missing JSON Data
+          rm -f "$ALL_URLS_FILE" "$SORTED_URLS_FILE"
+
+          echo "DOWNLOAD_COUNT=$DOWNLOAD_COUNT" >> "$GITHUB_ENV"
+          echo "SKIP_COUNT=$SKIP_COUNT" >> "$GITHUB_ENV"
+          echo "FAIL_COUNT=$FAIL_COUNT" >> "$GITHUB_ENV"
+
+          echo "========================================="
+          echo "下载完成: 新增 $DOWNLOAD_COUNT 个, 跳过 $SKIP_COUNT 个, 失败 $FAIL_COUNT 个"
+          echo "========================================="
+
+      - name: Create modified copies and inject missing JSON data
         env:
           CDN_DOMAIN: ${{ secrets.CDN_DOMAIN }}
         run: |
-          set -eu
+          set -euo pipefail
 
-          echo "Creating temporary directory for modified files..."
           rm -rf temp_oss
           mkdir -p temp_oss/model
 
-          if [ -d "model/cn" ] && [ "$(ls -A model/cn 2>/dev/null)" ]; then
-            cp -a model/cn/* temp_oss/model/
-          else
+          if [ ! -d "model/cn" ] || [ -z "$(ls -A model/cn 2>/dev/null)" ]; then
             echo "ERROR: model/cn directory is empty or not found"
             exit 1
           fi
 
-          # 去掉 .html 扩展名：list.html -> list, detail/8.html -> detail/8
-          find temp_oss -type f -name "*.html" | while read f; do
-            mv "$f" "${f%.html}"
-          done
+          cp -a model/cn/* temp_oss/model/
 
-          echo "Applying URL replacements with sed..."
+          # 去掉 .html 扩展名
+          while IFS= read -r -d '' f; do
+            mv "$f" "${f%.html}"
+          done < <(find temp_oss -type f -name "*.html" -print0)
+
+          echo "Applying URL replacements..."
           EXTENSIONS="png|jpg|jpeg|gif|webp|bmp|svg|ico|3mf|stl|gcode|snap3dp|snapcnc|snaplaser|zip|tar|gz|tgz|rar|7z|pdf|mp3|mp4|wav|avi|mov|exe|bin|apk|dmg|deb|rpm|msi|iso"
-          find temp_oss -type f | while read html_file; do
+          while IFS= read -r -d '' html_file; do
             sed -i -E "s#https://[a-zA-Z0-9.-]+/([^\"]+\.($EXTENSIONS))#https://$CDN_DOMAIN/download/\1#gi" "$html_file"
             sed -i -E "s#https://[a-zA-Z0-9.-]+/api/model/detail/([0-9]+)#https://$CDN_DOMAIN/model/detail/\1#g" "$html_file"
             sed -i 's/snapmaker\.com/snapmaker.cn/g' "$html_file"
-          done
+          done < <(find temp_oss -type f -print0)
 
-          echo "Running Python script to inject missing images into empty JSON arrays..."
-          cat << 'EOF' > inject_images.py
-          import os
-          import json
+          echo "Injecting missing images into empty JSON arrays..."
+          python3 .github/scripts/inject_images.py
 
-          cdn_domain = os.environ.get('CDN_DOMAIN', '')
-          temp_oss_dir = 'temp_oss'
-          downloads_dir = 'downloads/download'
-
-          image_map = {}
-          # 1. 扫描下载的图片，建立映射关系: image_map[model_id][partition_id] = [CDN URLs]
-          if os.path.exists(downloads_dir):
-              for root, dirs, files in os.walk(downloads_dir):
-                  for file in files:
-                      if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
-                          full_path = os.path.join(root, file)
-                          rel_path = os.path.relpath(full_path, 'downloads')
-                          parts = rel_path.replace('\\', '/').split('/')
-
-                          try:
-                              if 'images' in parts:
-                                  img_idx = parts.index('images')
-                                  model_id = parts[img_idx + 1]
-                                  part_folder = parts[img_idx + 2]
-                                  if part_folder.startswith('partition_'):
-                                      part_id = int(part_folder.split('_')[1])
-
-                                      if model_id not in image_map:
-                                          image_map[model_id] = {}
-                                      if part_id not in image_map[model_id]:
-                                          image_map[model_id][part_id] = []
-
-                                      cdn_url = f"https://{cdn_domain}/{rel_path}"
-                                      image_map[model_id][part_id].append(cdn_url)
-                          except Exception as e:
-                              pass
-
-          # 2. 递归查找并注入图片到空的 pics 数组中
-          def inject_images_recursive(obj, model_id):
-              modified = False
-              if isinstance(obj, dict):
-                  if 'partitions' in obj and isinstance(obj['partitions'], list):
-                      for partition in obj['partitions']:
-                          if isinstance(partition, dict):
-                              part_id = partition.get('id')
-                              # 如果找到了 partition，且 pics 为空，则进行注入
-                              if part_id is not None and not partition.get('pics'):
-                                  if model_id in image_map and part_id in image_map[model_id]:
-                                      partition['pics'] = sorted(image_map[model_id][part_id])
-                                      modified = True
-                  # 继续向下递归遍历所有字典的键值
-                  for k, v in obj.items():
-                      if isinstance(v, (dict, list)):
-                          if inject_images_recursive(v, model_id):
-                              modified = True
-              elif isinstance(obj, list):
-                  # 递归遍历列表中的元素
-                  for item in obj:
-                      if isinstance(item, (dict, list)):
-                          if inject_images_recursive(item, model_id):
-                              modified = True
-              return modified
-
-          # 3. 处理所有的 JSON (原本是 .html) 文件
-          detail_dir = os.path.join(temp_oss_dir, 'model', 'detail')
-          if os.path.exists(detail_dir):
-              for file in os.listdir(detail_dir):
-                  file_path = os.path.join(detail_dir, file)
-                  model_id = file # 文件名即为 Model ID
-                  try:
-                      with open(file_path, 'r', encoding='utf-8') as f:
-                          data = json.load(f)
-
-                      if inject_images_recursive(data, model_id):
-                          # 如果有修改，将数据重新写回文件（保持紧凑格式）
-                          with open(file_path, 'w', encoding='utf-8') as f:
-                              json.dump(data, f, ensure_ascii=False, separators=(',', ':'))
-                          print(f"  -> [成功] 已为 Model ID {model_id} 的空分区注入了图片数据")
-                  except Exception as e:
-                      pass
-          EOF
-
-          python3 inject_images.py
-          rm inject_images.py
-
-      - name: Sync model files to OSS
+      - name: Sync model files to OSS and delete stale files
         env:
           OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
         run: |
           set -euo pipefail
 
-          echo "Syncing model files to OSS..."
+          MODEL_UPLOAD_COUNT=0
+          MODEL_DELETE_COUNT=0
 
-          if [ -d "temp_oss/model" ] && [ "$(ls -A temp_oss/model 2>/dev/null)" ]; then
-            find temp_oss/model -type f | while read file; do
+          if [ ! -d "temp_oss/model" ] || [ -z "$(ls -A temp_oss/model 2>/dev/null)" ]; then
+            echo "No model files to sync"
+          else
+            echo "Syncing model files to OSS..."
+
+            # 上传本地所有文件
+            while IFS= read -r -d '' file; do
               rel_path=${file#temp_oss/}
               ossutil cp -f "$file" "oss://$OSS_BUCKET/$rel_path" \
-               --meta "Content-Type:application/json#Cache-Control:public, max-age=3600#Content-Disposition:inline"
-            done
-            echo "Model files synced successfully"
-          else
-            echo "No model files to sync"
+                --meta "Content-Type:application/json#Cache-Control:public, max-age=3600#Content-Disposition:inline"
+              MODEL_UPLOAD_COUNT=$((MODEL_UPLOAD_COUNT + 1))
+            done < <(find temp_oss/model -type f -print0)
+
+            # 构建本地 model 文件的 key 集合
+            LOCAL_MODEL_KEYS="local_model_keys.txt"
+            > "$LOCAL_MODEL_KEYS"
+            while IFS= read -r -d '' file; do
+              echo "${file#temp_oss/}" >> "$LOCAL_MODEL_KEYS"
+            done < <(find temp_oss/model -type f -print0)
+
+            # 列出 OSS model/ 下所有文件（-s 只输出路径，避免解析表头）
+            OSS_MODEL_KEYS="oss_model_keys.txt"
+            ossutil ls "oss://$OSS_BUCKET/model/" -s 2>/dev/null \
+              | grep -v '^$' | sed "s|oss://$OSS_BUCKET/||" > "$OSS_MODEL_KEYS" || true
+
+            # 删除 OSS 上多余的文件
+            while IFS= read -r oss_key; do
+              [ -z "$oss_key" ] && continue
+              if ! grep -qxF "$oss_key" "$LOCAL_MODEL_KEYS"; then
+                echo "  [删除] oss://$OSS_BUCKET/$oss_key"
+                ossutil rm -f "oss://$OSS_BUCKET/$oss_key"
+                MODEL_DELETE_COUNT=$((MODEL_DELETE_COUNT + 1))
+              fi
+            done < "$OSS_MODEL_KEYS"
+
+            rm -f "$LOCAL_MODEL_KEYS" "$OSS_MODEL_KEYS"
+            echo "Model 同步完成: 上传 $MODEL_UPLOAD_COUNT 个, 删除 $MODEL_DELETE_COUNT 个"
           fi
 
-      - name: Sync downloaded resource files to OSS
+          echo "MODEL_UPLOAD_COUNT=$MODEL_UPLOAD_COUNT" >> "$GITHUB_ENV"
+          echo "MODEL_DELETE_COUNT=$MODEL_DELETE_COUNT" >> "$GITHUB_ENV"
+
+      - name: Sync downloaded resource files to OSS and delete stale files
         env:
           OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
         run: |
           set -euo pipefail
 
-          > upload_verify_errors.txt
+          RESOURCE_UPLOAD_COUNT=0
+          RESOURCE_DELETE_COUNT=0
 
-          if [ -d "downloads" ] && [ "$(ls -A downloads 2>/dev/null)" ]; then
+          # 上传本次有变化的资源文件
+          if [ -d "downloads" ] && [ -n "$(ls -A downloads 2>/dev/null)" ]; then
             echo "Syncing downloaded resource files to OSS..."
-            find downloads/ -type f | while read file; do
+            while IFS= read -r -d '' file; do
               rel_path=${file#downloads/}
               local_md5=$(md5sum "$file" | awk '{print $1}' | tr '[:lower:]' '[:upper:]')
-
               ossutil cp -f "$file" "oss://$OSS_BUCKET/$rel_path" \
                 --meta "Cache-Control:public, max-age=86400" \
                 --meta "x-oss-meta-md5:$local_md5"
-            done
-            echo "Resource files sync completed"
+              RESOURCE_UPLOAD_COUNT=$((RESOURCE_UPLOAD_COUNT + 1))
+            done < <(find downloads/ -type f -print0)
           fi
+
+          # 删除 OSS download/ 上不再被任何 HTML 引用的文件
+          if [ -f "expected_download_keys.txt" ]; then
+            echo "Checking for stale resource files on OSS..."
+            OSS_DOWNLOAD_KEYS="oss_download_keys.txt"
+            ossutil ls "oss://$OSS_BUCKET/download/" -s 2>/dev/null \
+              | grep -v '^$' | sed "s|oss://$OSS_BUCKET/||" > "$OSS_DOWNLOAD_KEYS" || true
+
+            while IFS= read -r oss_key; do
+              [ -z "$oss_key" ] && continue
+              if ! grep -qxF "$oss_key" "expected_download_keys.txt"; then
+                echo "  [删除] oss://$OSS_BUCKET/$oss_key"
+                ossutil rm -f "oss://$OSS_BUCKET/$oss_key"
+                RESOURCE_DELETE_COUNT=$((RESOURCE_DELETE_COUNT + 1))
+              fi
+            done < "$OSS_DOWNLOAD_KEYS"
+
+            rm -f "$OSS_DOWNLOAD_KEYS"
+          fi
+
+          echo "资源文件同步完成: 上传 $RESOURCE_UPLOAD_COUNT 个, 删除 $RESOURCE_DELETE_COUNT 个"
+          echo "RESOURCE_UPLOAD_COUNT=$RESOURCE_UPLOAD_COUNT" >> "$GITHUB_ENV"
+          echo "RESOURCE_DELETE_COUNT=$RESOURCE_DELETE_COUNT" >> "$GITHUB_ENV"
 
       - name: Cleanup temporary files
         if: always()
         run: |
-          echo "Cleaning up temporary files..."
-          rm -rf temp_oss
-          rm -rf downloads
-          rm -f files_to_sync.txt
-          rm -f sync_errors.txt
-          rm -f upload_verify_errors.txt
+          rm -rf temp_oss downloads
+          rm -f sync_errors.txt expected_download_keys.txt
 
       - name: Setup aliyun-cli for CDN
         if: success()
         run: |
           set -euo pipefail
 
-          echo "Installing aliyun-cli..."
           wget -q https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz
           tar -xzf aliyun-cli-linux-latest-amd64.tgz
           sudo mv aliyun /usr/local/bin/
@@ -340,7 +307,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ -z "$CDN_ACCESS_KEY_ID" ] || [ -z "$CDN_ACCESS_KEY_SECRET" ]; then
+          if [ -z "${CDN_ACCESS_KEY_ID:-}" ] || [ -z "${CDN_ACCESS_KEY_SECRET:-}" ]; then
+            echo "CDN secrets not set, skipping CDN refresh"
             exit 0
           fi
 
@@ -361,5 +329,16 @@ jobs:
       - name: Job summary
         if: always()
         run: |
-          echo "Scope: model/cn -> OSS model/"
-          echo "Environment: ${ACT_ENV:-GitHub Actions}"
+          echo "========================================="
+          echo "同步完成汇总"
+          echo "========================================="
+          echo "资源文件: 下载 ${DOWNLOAD_COUNT:-0} 个, 跳过 ${SKIP_COUNT:-0} 个, 失败 ${FAIL_COUNT:-0} 个"
+          echo "Model 文件: 上传 ${MODEL_UPLOAD_COUNT:-0} 个, 删除 ${MODEL_DELETE_COUNT:-0} 个"
+          echo "资源文件: 上传 ${RESOURCE_UPLOAD_COUNT:-0} 个, 删除 ${RESOURCE_DELETE_COUNT:-0} 个"
+          echo "环境: ${ACT_ENV:-GitHub Actions}"
+
+          if [ -f sync_errors.txt ] && [ -s sync_errors.txt ]; then
+            echo ""
+            echo "警告：以下文件下载失败："
+            cat sync_errors.txt
+          fi
