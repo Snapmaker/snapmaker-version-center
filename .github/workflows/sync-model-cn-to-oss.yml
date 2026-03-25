@@ -158,8 +158,6 @@ jobs:
             sed -i 's/snapmaker\.com/snapmaker.cn/g' "$html_file"
           done < <(find temp_oss -type f -print0)
 
-          echo "Injecting missing images into empty JSON arrays..."
-          python3 .github/scripts/inject_images.py
 
       - name: Sync model files to OSS and delete stale files
         env:
