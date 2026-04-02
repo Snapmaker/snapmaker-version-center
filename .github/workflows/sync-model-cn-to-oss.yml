@@ -1,34 +1,75 @@
 name: Sync Model CN to Aliyun OSS
 
 on:
-  repository_dispatch:
+  pull_request:
     types:
-      - sync-model-cn
+      - closed
+    branches:
+      - main
+    paths:
+      - 'model/cn/**'
   workflow_dispatch:
     inputs:
       manual_run:
-        description: '手动触发同步 model/cn 数据到 OSS'
+        description: '手动触发全量同步 model/cn 数据到 OSS'
         required: false
         default: 'true'
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+    # PR 触发时仅在合并后运行，手动触发时始终运行
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Detect environment
+      - name: Detect changed model/cn files
+        id: changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          if [ -n "${ACT:-}" ]; then
-            echo "Running in act (local)"
-            echo "ACT_ENV=true" >> $GITHUB_ENV
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "手动触发：全量同步模式"
+            echo "SYNC_MODE=full" >> "$GITHUB_ENV"
+            echo "sync_mode=full" >> "$GITHUB_OUTPUT"
           else
-            echo "Running in GitHub Actions"
-            echo "ACT_ENV=false" >> $GITHUB_ENV
+            echo "PR 合并触发：增量同步模式"
+            echo "SYNC_MODE=incremental" >> "$GITHUB_ENV"
+            echo "sync_mode=incremental" >> "$GITHUB_OUTPUT"
+
+            # 获取 PR 中 model/cn/ 下变更的文件
+            CHANGED_FILES=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- 'model/cn/' || true)
+            DELETED_FILES=$(git diff --name-only --diff-filter=D "$BASE_SHA" "$HEAD_SHA" -- 'model/cn/' || true)
+            ADDED_MODIFIED_FILES=$(git diff --name-only --diff-filter=d "$BASE_SHA" "$HEAD_SHA" -- 'model/cn/' || true)
+
+            if [ -z "$CHANGED_FILES" ]; then
+              echo "没有 model/cn/ 下的文件变更，跳过同步"
+              echo "HAS_CHANGES=false" >> "$GITHUB_ENV"
+              echo "has_changes=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            echo "变更的文件:"
+            echo "$CHANGED_FILES"
+
+            # 保存文件列表供后续步骤使用
+            echo "$ADDED_MODIFIED_FILES" > /tmp/changed_model_files.txt
+            echo "$DELETED_FILES" > /tmp/deleted_model_files.txt
+
+            echo "HAS_CHANGES=true" >> "$GITHUB_ENV"
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Validate secrets
+        if: env.SYNC_MODE == 'full' || env.HAS_CHANGES == 'true'
         env:
           OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
           OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
@@ -47,6 +88,7 @@ jobs:
           echo "All required secrets are present"
 
       - name: Setup ossutil
+        if: env.SYNC_MODE == 'full' || env.HAS_CHANGES == 'true'
         run: |
           set -euo pipefail
 
@@ -56,6 +98,7 @@ jobs:
           ossutil --version
 
       - name: Configure ossutil
+        if: env.SYNC_MODE == 'full' || env.HAS_CHANGES == 'true'
         env:
           OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
           OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
@@ -67,6 +110,7 @@ jobs:
           ossutil ls oss:// || echo "Warning: Could not list OSS buckets"
 
       - name: Extract resource URLs and download files
+        if: env.SYNC_MODE == 'full' || env.HAS_CHANGES == 'true'
         run: |
           set -euo pipefail
 
@@ -84,10 +128,23 @@ jobs:
           ALL_URLS_FILE="all_resource_urls.txt"
           > "$ALL_URLS_FILE"
 
-          while IFS= read -r -d '' html_file; do
-            echo "Extracting URLs from: $html_file"
-            grep -oE 'https?://[^"'\''[:space:]<>]+' "$html_file" 2>/dev/null >> "$ALL_URLS_FILE" || true
-          done < <(find model/cn/ -name "*.html" -type f -print0 2>/dev/null)
+          if [ "$SYNC_MODE" = "incremental" ]; then
+            # 增量模式：仅从变更的文件中提取 URL
+            echo "增量模式：仅处理变更文件的资源"
+            while IFS= read -r changed_file; do
+              [ -z "$changed_file" ] && continue
+              if [ -f "$changed_file" ]; then
+                echo "Extracting URLs from: $changed_file"
+                grep -oE 'https?://[^"'\''[:space:]<>]+' "$changed_file" 2>/dev/null >> "$ALL_URLS_FILE" || true
+              fi
+            done < /tmp/changed_model_files.txt
+          else
+            # 全量模式：处理所有文件
+            while IFS= read -r -d '' html_file; do
+              echo "Extracting URLs from: $html_file"
+              grep -oE 'https?://[^"'\''[:space:]<>]+' "$html_file" 2>/dev/null >> "$ALL_URLS_FILE" || true
+            done < <(find model/cn/ -name "*.html" -type f -print0 2>/dev/null)
+          fi
 
           SORTED_URLS_FILE="sorted_resource_urls.txt"
           sort -u "$ALL_URLS_FILE" > "$SORTED_URLS_FILE"
@@ -130,6 +187,7 @@ jobs:
           echo "========================================="
 
       - name: Create modified copies and inject missing JSON data
+        if: env.SYNC_MODE == 'full' || env.HAS_CHANGES == 'true'
         env:
           CDN_DOMAIN: ${{ secrets.CDN_DOMAIN }}
         run: |
@@ -138,12 +196,29 @@ jobs:
           rm -rf temp_oss
           mkdir -p temp_oss/model
 
-          if [ ! -d "model/cn" ] || [ -z "$(ls -A model/cn 2>/dev/null)" ]; then
-            echo "ERROR: model/cn directory is empty or not found"
-            exit 1
-          fi
+          EXTENSIONS="png|jpg|jpeg|gif|webp|bmp|svg|ico|3mf|stl|gcode|snap3dp|snapcnc|snaplaser|zip|tar|gz|tgz|rar|7z|pdf|mp3|mp4|wav|avi|mov|exe|bin|apk|dmg|deb|rpm|msi|iso"
 
-          cp -a model/cn/* temp_oss/model/
+          if [ "$SYNC_MODE" = "incremental" ]; then
+            # 增量模式：仅复制和处理变更的文件
+            echo "增量模式：仅处理变更的文件"
+            while IFS= read -r changed_file; do
+              [ -z "$changed_file" ] && continue
+              if [ -f "$changed_file" ]; then
+                # changed_file 格式: model/cn/xxx.html -> temp_oss/model/xxx.html
+                rel_path="${changed_file#model/cn/}"
+                target_dir="temp_oss/model/$(dirname "$rel_path")"
+                mkdir -p "$target_dir"
+                cp -a "$changed_file" "temp_oss/model/$rel_path"
+              fi
+            done < /tmp/changed_model_files.txt
+          else
+            # 全量模式：复制所有文件
+            if [ ! -d "model/cn" ] || [ -z "$(ls -A model/cn 2>/dev/null)" ]; then
+              echo "ERROR: model/cn directory is empty or not found"
+              exit 1
+            fi
+            cp -a model/cn/* temp_oss/model/
+          fi
 
           # 去掉 .html 扩展名
           while IFS= read -r -d '' f; do
@@ -151,15 +226,54 @@ jobs:
           done < <(find temp_oss -type f -name "*.html" -print0)
 
           echo "Applying URL replacements..."
-          EXTENSIONS="png|jpg|jpeg|gif|webp|bmp|svg|ico|3mf|stl|gcode|snap3dp|snapcnc|snaplaser|zip|tar|gz|tgz|rar|7z|pdf|mp3|mp4|wav|avi|mov|exe|bin|apk|dmg|deb|rpm|msi|iso"
           while IFS= read -r -d '' html_file; do
             sed -i -E "s#https://[a-zA-Z0-9.-]+/([^\"]+\.($EXTENSIONS))#https://$CDN_DOMAIN/download/\1#gi" "$html_file"
             sed -i -E "s#https://[a-zA-Z0-9.-]+/api/model/detail/([0-9]+)#https://$CDN_DOMAIN/model/detail/\1#g" "$html_file"
             sed -i 's/snapmaker\.com/snapmaker.cn/g' "$html_file"
           done < <(find temp_oss -type f -print0)
 
+      - name: Sync model files to OSS (incremental)
+        if: env.SYNC_MODE == 'incremental' && env.HAS_CHANGES == 'true'
+        env:
+          OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+        run: |
+          set -euo pipefail
 
-      - name: Sync model files to OSS and delete stale files
+          MODEL_UPLOAD_COUNT=0
+          MODEL_DELETE_COUNT=0
+
+          # 上传变更的文件
+          if [ -d "temp_oss/model" ] && [ -n "$(ls -A temp_oss/model 2>/dev/null)" ]; then
+            echo "增量上传变更的 model 文件..."
+            while IFS= read -r -d '' file; do
+              rel_path=${file#temp_oss/}
+              ossutil cp -f "$file" "oss://$OSS_BUCKET/$rel_path" \
+                --meta "Content-Type:application/json#Cache-Control:public, max-age=3600#Content-Disposition:inline"
+              MODEL_UPLOAD_COUNT=$((MODEL_UPLOAD_COUNT + 1))
+              echo "  [上传] $rel_path"
+            done < <(find temp_oss/model -type f -print0)
+          fi
+
+          # 删除在 PR 中被删除的文件
+          if [ -f /tmp/deleted_model_files.txt ]; then
+            while IFS= read -r deleted_file; do
+              [ -z "$deleted_file" ] && continue
+              # deleted_file 格式: model/cn/detail/xx.html -> OSS key: model/detail/xx (去掉 cn/ 和 .html)
+              rel_path="${deleted_file#model/cn/}"
+              oss_key="model/${rel_path%.html}"
+              echo "  [删除] oss://$OSS_BUCKET/$oss_key"
+              ossutil rm -f "oss://$OSS_BUCKET/$oss_key" || true
+              MODEL_DELETE_COUNT=$((MODEL_DELETE_COUNT + 1))
+            done < /tmp/deleted_model_files.txt
+          fi
+
+          echo "MODEL_UPLOAD_COUNT=$MODEL_UPLOAD_COUNT" >> "$GITHUB_ENV"
+          echo "MODEL_DELETE_COUNT=$MODEL_DELETE_COUNT" >> "$GITHUB_ENV"
+
+          echo "增量同步完成: 上传 $MODEL_UPLOAD_COUNT 个, 删除 $MODEL_DELETE_COUNT 个"
+
+      - name: Sync model files to OSS (full) and delete stale files
+        if: env.SYNC_MODE == 'full'
         env:
           OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
         run: |
@@ -171,7 +285,7 @@ jobs:
           if [ ! -d "temp_oss/model" ] || [ -z "$(ls -A temp_oss/model 2>/dev/null)" ]; then
             echo "No model files to sync"
           else
-            echo "Syncing model files to OSS..."
+            echo "全量同步 model 文件到 OSS..."
 
             while IFS= read -r -d '' file; do
               rel_path=${file#temp_oss/}
@@ -202,13 +316,14 @@ jobs:
             done < "$OSS_MODEL_KEYS"
 
             rm -f "$LOCAL_MODEL_KEYS" "$OSS_MODEL_KEYS"
-            echo "Model 同步完成: 上传 $MODEL_UPLOAD_COUNT 个, 删除 $MODEL_DELETE_COUNT 个"
+            echo "全量同步完成: 上传 $MODEL_UPLOAD_COUNT 个, 删除 $MODEL_DELETE_COUNT 个"
           fi
 
           echo "MODEL_UPLOAD_COUNT=$MODEL_UPLOAD_COUNT" >> "$GITHUB_ENV"
           echo "MODEL_DELETE_COUNT=$MODEL_DELETE_COUNT" >> "$GITHUB_ENV"
 
       - name: Sync downloaded resource files to OSS
+        if: env.SYNC_MODE == 'full' || env.HAS_CHANGES == 'true'
         env:
           OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
         run: |
@@ -235,9 +350,10 @@ jobs:
           rm -rf temp_oss downloads
           rm -f sync_errors.txt all_resource_urls.txt sorted_resource_urls.txt
           rm -f local_model_keys.txt oss_model_keys.txt
+          rm -f /tmp/changed_model_files.txt /tmp/deleted_model_files.txt
 
       - name: Setup aliyun-cli for CDN
-        if: success()
+        if: success() && (env.SYNC_MODE == 'full' || env.HAS_CHANGES == 'true')
         run: |
           set -euo pipefail
 
@@ -247,7 +363,7 @@ jobs:
           rm -f aliyun-cli-linux-latest-amd64.tgz
 
       - name: Refresh CDN cache
-        if: success()
+        if: success() && (env.SYNC_MODE == 'full' || env.HAS_CHANGES == 'true')
         env:
           CDN_ACCESS_KEY_ID: ${{ secrets.CDN_ACCESS_KEY_ID }}
           CDN_ACCESS_KEY_SECRET: ${{ secrets.CDN_ACCESS_KEY_SECRET }}
@@ -267,12 +383,52 @@ jobs:
             --access-key-id "$CDN_ACCESS_KEY_ID" \
             --access-key-secret "$CDN_ACCESS_KEY_SECRET"
 
-          REFRESH_PATHS="https://$CDN_DOMAIN/model/
+          if [ "$SYNC_MODE" = "incremental" ]; then
+            # 增量模式：仅刷新变更文件对应的 CDN 路径
+            echo "增量刷新 CDN 缓存..."
+            REFRESH_URLS=""
+
+            # 刷新变更的 model 文件
+            if [ -d "temp_oss/model" ]; then
+              while IFS= read -r -d '' file; do
+                rel_path=${file#temp_oss/}
+                REFRESH_URLS="${REFRESH_URLS}https://$CDN_DOMAIN/$rel_path
+          "
+              done < <(find temp_oss -type f -print0 2>/dev/null)
+            fi
+
+            # 刷新被删除的文件
+            if [ -f /tmp/deleted_model_files.txt ]; then
+              while IFS= read -r deleted_file; do
+                [ -z "$deleted_file" ] && continue
+                rel_path="${deleted_file#model/cn/}"
+                oss_key="model/${rel_path%.html}"
+                REFRESH_URLS="${REFRESH_URLS}https://$CDN_DOMAIN/$oss_key
+          "
+              done < /tmp/deleted_model_files.txt
+            fi
+
+            if [ -n "$REFRESH_URLS" ]; then
+              aliyun --profile cdn-profile cdn RefreshObjectCaches \
+                --ObjectPath "$REFRESH_URLS" \
+                --ObjectType File 2>&1 || true
+            fi
+
+            # 资源文件目录刷新
+            if [ -d "downloads" ] && [ -n "$(ls -A downloads 2>/dev/null)" ]; then
+              aliyun --profile cdn-profile cdn RefreshObjectCaches \
+                --ObjectPath "https://$CDN_DOMAIN/download/" \
+                --ObjectType Directory 2>&1 || true
+            fi
+          else
+            # 全量模式：刷新整个目录
+            REFRESH_PATHS="https://$CDN_DOMAIN/model/
           https://$CDN_DOMAIN/download/"
 
-          aliyun --profile cdn-profile cdn RefreshObjectCaches \
-            --ObjectPath "$REFRESH_PATHS" \
-            --ObjectType Directory 2>&1 || true
+            aliyun --profile cdn-profile cdn RefreshObjectCaches \
+              --ObjectPath "$REFRESH_PATHS" \
+              --ObjectType Directory 2>&1 || true
+          fi
 
       - name: Job summary
         if: always()
@@ -280,10 +436,10 @@ jobs:
           echo "========================================="
           echo "同步完成汇总"
           echo "========================================="
+          echo "同步模式: ${SYNC_MODE:-unknown}"
           echo "资源文件: 下载 ${DOWNLOAD_COUNT:-0} 个, 失败 ${FAIL_COUNT:-0} 个"
           echo "Model 文件: 上传 ${MODEL_UPLOAD_COUNT:-0} 个, 删除 ${MODEL_DELETE_COUNT:-0} 个"
           echo "资源文件上传: ${RESOURCE_UPLOAD_COUNT:-0} 个"
-          echo "环境: ${ACT_ENV:-GitHub Actions}"
 
           if [ -f sync_errors.txt ] && [ -s sync_errors.txt ]; then
             echo ""
