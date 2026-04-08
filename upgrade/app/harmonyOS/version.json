@@ -1,0 +1,42 @@
+{
+  "code": 200,
+  "data": {
+    "has_update": true,
+    "is_force": false,
+    "latest_version": "2.3.0",
+    "latest_build_number": 1326032100,
+    "contents": {
+      "en": {
+        "title": "New Version Avail",
+        "description": "Added model library section to support online initiation of printing process.",
+        "items": []
+      },
+      "zh": {
+        "title": "发现新版本",
+        "description": "新增模型库版块，支持在线发起打印流程。",
+        "items": []
+      }
+    },
+    "ios":{
+      "store_url": "itms-apps://itunes.apple.com/app/id6670739251",
+      "channels": ["appstore"],
+      "file_size": 1024,
+      "file_md5": ""
+    },
+    "android":{
+      "store_url": "https://www.snapmaker.com/snapmaker-app",
+      "channels": ["Snapmaker"],
+      "file_size": 1024,
+      "file_md5": "1234567890"
+    },
+    "harmonyOS":{
+      "store_url": "https://appgallery.huawei.com/app/detail?id=com.snapmaker.lavaapp.cn",
+      "channels": ["Snapmaker"],
+      "file_size": 1024,
+      "file_md5": "1234567890"
+    }
+  }
+}
+
+
+
