@@ -3,10 +3,10 @@
     "msg": "update",
     "data": {
             "build_number": "20260324145420",
-            "min_support_pc_version": "2.3.0",
-            "max_support_pc_version": "2.3.0",
+            "min_support_pc_version": "2.3.1",
+            "max_support_pc_version": "2.3.1",
             "is_force_upgrade":false,
-            "file_version": "2.3.2",
+            "file_version": "2.4.8",
             "file_size":16341930,
             "file_md5": "ED0489D1A1848BF3B0DD7B98E82554BE",
             "file_sha256":"684B7851BC1814710E7E4083C9898562904AF1F50AFD0E3FA0C3E33BB453918D",
