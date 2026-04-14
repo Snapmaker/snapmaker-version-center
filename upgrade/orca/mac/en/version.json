@@ -4,35 +4,35 @@
   "data": {
     "is_full_upgrade": true,
     "is_force_upgrade": false,
-    "version": "2.3.0",
+    "version": "2.3.1",
     "release_type": "stable",
     "platform_type": "mac",
     "full": {
       "default": {
-        "file_size": 227791516,
-        "file_md5": "b398662ac5768a50576d4fefed6ef88a",
-        "file_sha256": "2d8258c745aac50e697a2bd1c261950aa53fca46f60ac6e851abf9f0d516e14b",
-        "file_url": "https://github.com/Snapmaker/OrcaSlicer/releases/download/v2.3.0/Snapmaker_Orca_Mac_universal_V2.3.0.dmg",
+        "file_size": 226536066,
+        "file_md5": "838a3f6ab57d15e38b156a30d52f5b55",
+        "file_sha256": "4ddf1bcb28ed3142627ce6da532e69ce82cbf28ad89289eeba616fd209f1209e",
+        "file_url": "https://github.com/Snapmaker/OrcaSlicer/releases/download/v2.3.1/Snapmaker_Orca_Mac_universal_V2.3.1.dmg",
         "reserved_1": "",
         "reserved_2": ""
       },
       "arm": {
-        "file_size": 227791516,
-        "file_md5": "b398662ac5768a50576d4fefed6ef88a",
-        "file_sha256": "2d8258c745aac50e697a2bd1c261950aa53fca46f60ac6e851abf9f0d516e14b",
-        "file_url": "https://github.com/Snapmaker/OrcaSlicer/releases/download/v2.3.0/Snapmaker_Orca_Mac_universal_V2.3.0.dmg",
+        "file_size": 226536066,
+        "file_md5": "838a3f6ab57d15e38b156a30d52f5b55",
+        "file_sha256": "4ddf1bcb28ed3142627ce6da532e69ce82cbf28ad89289eeba616fd209f1209e",
+        "file_url": "https://github.com/Snapmaker/OrcaSlicer/releases/download/v2.3.1/Snapmaker_Orca_Mac_universal_V2.3.1.dmg",
         "reserved_1": "",
         "reserved_2": ""
       },
       "intel": {
-        "file_size": 227791516,
-        "file_md5": "b398662ac5768a50576d4fefed6ef88a",
-        "file_sha256": "2d8258c745aac50e697a2bd1c261950aa53fca46f60ac6e851abf9f0d516e14b",
-        "file_url": "https://github.com/Snapmaker/OrcaSlicer/releases/download/v2.3.0/Snapmaker_Orca_Mac_universal_V2.3.0.dmg",
+        "file_size": 226536066,
+        "file_md5": "838a3f6ab57d15e38b156a30d52f5b55",
+        "file_sha256": "4ddf1bcb28ed3142627ce6da532e69ce82cbf28ad89289eeba616fd209f1209e",
+        "file_url": "https://github.com/Snapmaker/OrcaSlicer/releases/download/v2.3.1/Snapmaker_Orca_Mac_universal_V2.3.1.dmg",
         "reserved_1": "",
         "reserved_2": ""
       },
-      "file_describe": "New Features\n1. Added a Model Library section, allowing you to download 3MF files and start print jobs directly online.\n2. Added new official material types.\n3. Added color options for third-party materials.\n\nBug Fixes\n1. Fixed an issue where the software crashed when printing with filaments that use a transparent channel.\n2. Fixed occasional lag in certain HTTP requests.\n3. Fixed abnormal page redirection when switching, adding, or removing printer models.\n4. Fixed an issue where U1 disconnected in LAN mode.\n\nImprovements\n1. Corrected the name of Polymaker filaments."
+      "file_describe": "Snapmaker Orca\nNew Features\n1. Added nozzles of 0.2mm, 0.6mm, and 0.8mm.\n2. Added \"Graphic Effect Plate\", and renamed \"Smooth High Temp Plate\" to \"Smooth PEI Plate\".\n3. Added new official filament types, now supporting multiple Silk Dual-Color PLA filaments.\n4. After clicking Print Now in the Model Library, a plate selection option is now available on the Print Preprocessing page.\n\nBug Fixes\n1. Fixed an issue where Web resource packages and process profiles could fail to update.\n2. Fixed an issue where server-side message backlogs caused devices in Cloud Mode to receive numerous outdated messages.\n3. Fixed an issue where some U1 printers failed to retrieve filament information after connecting.\n\nImprovements\n1. Optimized the camera countdown feature: removed the countdown in Cloud Mode, and cancelled the 5-minute limit in LAN Mode."
     }
   }
 }
