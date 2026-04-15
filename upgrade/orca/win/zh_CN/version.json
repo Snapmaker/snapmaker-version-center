@@ -4,19 +4,19 @@
     "data": {
         "is_full_upgrade": true,
         "is_force_upgrade": false,
-        "version": "2.3.0",
+        "version": "2.3.1",
         "release_type": "stable",
         "platform_type": "win",
         "full": {
             "default": {
-                "file_size": 107233440,
-                "file_md5": "84A36C0CDDF9293B48F17E4EF99E8C69",
-                "file_sha256": "C48AF5486E71C50D1B4A9A2CD497F376245153EF557CD2A6ECC5DD289F851B77",
-                "file_url": "https://meta-cfg.snapmaker.cn/download/Snapmaker/OrcaSlicer/releases/download/v2.3.0/Snapmaker_Orca_Windows_Installer_V2.3.0.exe",
+                "file_size": 107288872,
+                "file_md5": "6B3C894166122A4A288967499B3CCF55",
+                "file_sha256": "4FC87905969275CC829EB246DFEA81F5AADF028610A05E1D9706FE0A737E39CE",
+                "file_url": "https://meta-cfg.snapmaker.cn/download/Snapmaker/OrcaSlicer/releases/download/v2.3.1/Snapmaker_Orca_Windows_Installer_V2.3.1.exe",
                 "reserved_1": "",
                 "reserved_2": ""
             },
-               "file_describe": "1. 新增项\n- 新增模型库版块，可下载对应模型的 3MF 文件，支持在线发起打印流程。\n- 新增官方耗材种类。\n- 新增第三方耗材的颜色选项。\n\n2. 修复项\n- 修复了使用透明通道的耗材打印时，软件崩溃的问题。\n- 修复了部分 HTTP 请求卡顿的问题。\n- 修复了切换或增删机型时，页面异常跳转的问题。\n- 修复了 U1 在局域网模式下连接断开的问题。\n\n3. 优化项\n- 修正了 Polymaker 的耗材名称。"
+               "file_describe": "Snapmaker Orca\n新增项\n1. 新增 0.2mm、0.6mm、0.8mm 喷嘴。\n\n<img width=\"505\" height=\"240\" alt=\"image\" src=\"https://github.com/user-attachments/assets/60a3c478-a19e-4261-be12-3be17f870b56\" />\n\n2. 新增 “特效纹理热床”，修改 “光滑高温打印热床” 为 “光面 PEI 热床”。\n\n<img width=\"495\" height=\"155\" alt=\"image\" src=\"https://github.com/user-attachments/assets/a3b1378b-81ec-47bf-94d1-1f09de4c9b8d\" />\n\n3. 新增官方耗材种类，现已支持多款双色丝绸 PLA 耗材。\n4. 点击模型库中的 “直接打印” 后，在打印预处理页面新增了分盘选择功能。\n\n<img width=\"819\" height=\"801\" alt=\"image\" src=\"https://github.com/user-attachments/assets/ac5fe212-59b6-4ddb-94ae-a2910afe937e\" />\n\n修复项\n1. 修复了 Web 资源包和工艺更新失败的问题。\n2. 修复了云联设备时，因服务端消息积压导致设备收到大量过期消息的问题。\n3. 修复了部分 U1 联机后获取设备耗材异常的问题。\n\n优化项\n1. 优化摄像机的倒计时功能。云模式下移除倒计时，局域网模式下取消 5 分钟限制。"
         }
     }
 }

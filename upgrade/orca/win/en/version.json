@@ -4,19 +4,19 @@
   "data": {
     "is_full_upgrade": true,
     "is_force_upgrade": false,
-    "version": "2.3.0",
+    "version": "2.3.1",
     "release_type": "stable",
     "platform_type": "win",
     "full": {
       "default": {
-        "file_size": 107233440,
-        "file_md5": "84A36C0CDDF9293B48F17E4EF99E8C69",
-        "file_sha256": "C48AF5486E71C50D1B4A9A2CD497F376245153EF557CD2A6ECC5DD289F851B77",
-        "file_url": "https://github.com/Snapmaker/OrcaSlicer/releases/download/v2.3.0/Snapmaker_Orca_Windows_Installer_V2.3.0.exe",
+        "file_size": 107288872,
+        "file_md5": "6B3C894166122A4A288967499B3CCF55",
+        "file_sha256": "4FC87905969275CC829EB246DFEA81F5AADF028610A05E1D9706FE0A737E39CE",
+        "file_url": "https://github.com/Snapmaker/OrcaSlicer/releases/download/v2.3.1/Snapmaker_Orca_Windows_Installer_V2.3.1.exe",
         "reserved_1": "",
         "reserved_2": ""
       },
-      "file_describe": "New Features\n1. Added a Model Library section, allowing you to download 3MF files and start print jobs directly online.\n2. Added new official material types.\n3. Added color options for third-party materials.\n\nBug Fixes\n1. Fixed an issue where the software crashed when printing with filaments that use a transparent channel.\n2. Fixed occasional lag in certain HTTP requests.\n3. Fixed abnormal page redirection when switching, adding, or removing printer models.\n4. Fixed an issue where U1 disconnected in LAN mode.\n\nImprovements\n1. Corrected the name of Polymaker filaments."
+      "file_describe": "Snapmaker Orca\nNew Features\n1. Added nozzles of 0.2mm, 0.6mm, and 0.8mm.\n2. Added \"Graphic Effect Plate\", and renamed \"Smooth High Temp Plate\" to \"Smooth PEI Plate\".\n3. Added new official filament types, now supporting multiple Silk Dual-Color PLA filaments.\n4. After clicking Print Now in the Model Library, a plate selection option is now available on the Print Preprocessing page.\n\nBug Fixes\n1. Fixed an issue where Web resource packages and process profiles could fail to update.\n2. Fixed an issue where server-side message backlogs caused devices in Cloud Mode to receive numerous outdated messages.\n3. Fixed an issue where some U1 printers failed to retrieve filament information after connecting.\n\nImprovements\n1. Optimized the camera countdown feature: removed the countdown in Cloud Mode, and cancelled the 5-minute limit in LAN Mode."
     }
   }
 }
