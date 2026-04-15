@@ -9,25 +9,25 @@
         "platform_type": "mac",
         "full": {
             "default": {
-                "file_size": 226536066,
-                "file_md5": "838a3f6ab57d15e38b156a30d52f5b55",
-                "file_sha256": "4ddf1bcb28ed3142627ce6da532e69ce82cbf28ad89289eeba616fd209f1209e",
+                "file_size": 227653669,
+                "file_md5": "abd1d52459f055a29e922fc2e16af509",
+                "file_sha256": "7a4a3ef9d43ee9bce6b4b21bd6f48c8eb775e12a38b4317bc9365ce9b3fae478",
                 "file_url": "https://meta-cfg.snapmaker.cn/download/Snapmaker/OrcaSlicer/releases/download/v2.3.1/Snapmaker_Orca_Mac_universal_V2.3.1.dmg",
                 "reserved_1": "",
                 "reserved_2": ""
             },
             "arm": {
-                "file_size": 226536066,
-                "file_md5": "838a3f6ab57d15e38b156a30d52f5b55",
-                "file_sha256": "4ddf1bcb28ed3142627ce6da532e69ce82cbf28ad89289eeba616fd209f1209e",
+                "file_size": 227653669,
+                "file_md5": "abd1d52459f055a29e922fc2e16af509",
+                "file_sha256": "7a4a3ef9d43ee9bce6b4b21bd6f48c8eb775e12a38b4317bc9365ce9b3fae478",
                 "file_url": "https://meta-cfg.snapmaker.cn/download/Snapmaker/OrcaSlicer/releases/download/v2.3.1/Snapmaker_Orca_Mac_universal_V2.3.1.dmg",
                 "reserved_1": "",
                 "reserved_2": ""
             },
             "intel": {
-                "file_size": 226536066,
-                "file_md5": "838a3f6ab57d15e38b156a30d52f5b55",
-                "file_sha256": "4ddf1bcb28ed3142627ce6da532e69ce82cbf28ad89289eeba616fd209f1209e",
+                "file_size": 227653669,
+                "file_md5": "abd1d52459f055a29e922fc2e16af509",
+                "file_sha256": "7a4a3ef9d43ee9bce6b4b21bd6f48c8eb775e12a38b4317bc9365ce9b3fae478",
                 "file_url": "https://meta-cfg.snapmaker.cn/download/Snapmaker/OrcaSlicer/releases/download/v2.3.1/Snapmaker_Orca_Mac_universal_V2.3.1.dmg",
                 "reserved_1": "",
                 "reserved_2": ""

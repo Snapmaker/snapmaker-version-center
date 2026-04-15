@@ -9,9 +9,9 @@
     "platform_type": "win",
     "full": {
       "default": {
-        "file_size": 107284464,
-        "file_md5": "A750E520023F5C0EC69B641A7805E0D3",
-        "file_sha256": "AC038AA45DC7D90503F2FADA4186AFAA8C1910DADE5F9940F7A06D6812A30B4B",
+        "file_size": 107288872,
+        "file_md5": "6B3C894166122A4A288967499B3CCF55",
+        "file_sha256": "4FC87905969275CC829EB246DFEA81F5AADF028610A05E1D9706FE0A737E39CE",
         "file_url": "https://github.com/Snapmaker/OrcaSlicer/releases/download/v2.3.1/Snapmaker_Orca_Windows_Installer_V2.3.1.exe",
         "reserved_1": "",
         "reserved_2": ""
