@@ -4,7 +4,7 @@
   "data": {
     "is_full_upgrade": true,
     "is_force_upgrade": false,
-    "version": "2.3.4",
+    "version": "2.3.5",
     "release_type": "stable",
     "platform_type": "win",
     "full": {
@@ -12,11 +12,11 @@
         "file_size": 107851312,
         "file_md5": "46e084b44d138e5e7f010140294cfd76",
         "file_sha256": "7d9a1e715564abf6a882da195c83bc0e2c24a34a6f76098b81ec7e94578b4ce1",
-        "file_url": "https://github.com/Snapmaker/OrcaSlicer/releases/download/v2.3.4/Snapmaker_Orca_Windows_Installer_V2.3.4.exe",
+        "file_url": "https://github.com/Snapmaker/OrcaSlicer/releases/download/v2.3.5/Snapmaker_Orca_Windows_Installer_V2.3.5.exe",
         "reserved_1": "",
         "reserved_2": ""
       },
-      "file_describe": "Bug Fixes\n1. Fixed an issue where filament mapping failed on the Print Preprocessing page when Generic Support for PLA was selected.\n2. Fixed an issue where slicing painted models with dome-shaped structures could result in maze-like patterns, island artifacts, or partial geometry loss.\n3. Re-enabled infill parameter settings under Process > Multimaterial > Filament for Features.\n4. Fixed an issue with the Fuzzy Skin painting feature where certain painted areas failed to generate Fuzzy Skin while unpainted areas incorrectly generated it.\n5. Fixed an issue where sparse infill patterns were misaligned on the first layer."
+      "file_describe": "Bug Fixes\n1. Fixed an issue where filament types were displayed incorrectly after reopening a saved project. This issue occurred when the project contained multiple filament types and the number of filaments was reduced in Orca after the project was saved.\n2. Fixed an issue where 25% mixing recommendations were still displayed after the minimum mixing ratio for Match mode was set to 30%.\n3. Fixed an issue where layer height subdivision was incorrectly applied to single-color regions. This occurred when Full Domain was enabled and both single-color and color mixing painting used the same layer height.\n4. Fixed an issue that caused incorrect filament usage estimates for the wipe tower.\n5. Fixed an issue where the wipe tower brim overlapped with the model brim.\n6. Fixed an issue where web resources and process resources could not be used properly after a hot update.\n7. The Independent Support Layer Height option is now available without disabling the wipe tower. It is unchecked by default. \n8. Fixed an issue where Snapmaker Orca could become unresponsive after startup on some PCs."
     }
   }
 }

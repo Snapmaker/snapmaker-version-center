@@ -4,7 +4,7 @@
     "data": {
         "is_full_upgrade": true,
         "is_force_upgrade": false,
-        "version": "2.3.4",
+        "version": "2.3.5",
         "release_type": "stable",
         "platform_type": "mac",
         "full": {
@@ -12,7 +12,7 @@
                 "file_size": 225744985,
                 "file_md5": "7dddfedd545b18c6e80129270ee477ac",
                 "file_sha256": "ec79f5785aa1d1a6cd1368d0ded7241c37834bed28f0924314a19aacc8ef3425",
-                "file_url": "https://snapmaker.oss-cn-beijing.aliyuncs.com/orca/Snapmaker_Orca_Mac_universal_V2.3.4.dmg",
+                "file_url": "https://cdn1.snapmaker.cn/orca/2.3.5/Snapmaker_Orca_Mac_universal_V2.3.5.dmg",
                 "reserved_1": "",
                 "reserved_2": ""
             },
@@ -20,7 +20,7 @@
                 "file_size": 225744985,
                 "file_md5": "7dddfedd545b18c6e80129270ee477ac",
                 "file_sha256": "ec79f5785aa1d1a6cd1368d0ded7241c37834bed28f0924314a19aacc8ef3425",
-                "file_url": "https://snapmaker.oss-cn-beijing.aliyuncs.com/orca/Snapmaker_Orca_Mac_universal_V2.3.4.dmg",
+                "file_url": "https://cdn1.snapmaker.cn/orca/2.3.5/Snapmaker_Orca_Mac_universal_V2.3.5.dmg",
                 "reserved_1": "",
                 "reserved_2": ""
             },
@@ -28,11 +28,11 @@
                 "file_size": 225744985,
                 "file_md5": "7dddfedd545b18c6e80129270ee477ac",
                 "file_sha256": "ec79f5785aa1d1a6cd1368d0ded7241c37834bed28f0924314a19aacc8ef3425",
-                "file_url": "https://snapmaker.oss-cn-beijing.aliyuncs.com/orca/Snapmaker_Orca_Mac_universal_V2.3.4.dmg",
+                "file_url": "https://cdn1.snapmaker.cn/orca/2.3.5/Snapmaker_Orca_Mac_universal_V2.3.5.dmg",
                 "reserved_1": "",
                 "reserved_2": ""
             },
-            "file_describe": "Snapmaker Orca\n修复项\n1. 修复了当选择耗材为 Generic Support for PLA 时，打印预处理页面中耗材映射失效的问题。\n2. 修复了带圆顶结构的模型在使用涂色功能后，切片结果出现迷宫状、岛屿状结构甚至局部缺失的问题。\n3. 在工艺 > 材料 > 特征用耗材中，重新开放了填充的参数设置。\n4. 修复了手绘绒毛表面时，部分已绘制区域未生成绒毛，而未绘制区域生成绒毛的问题。\n5. 修复了稀疏填充图案在首层出现错位的问题。"
+            "file_describe": "Snapmaker Orca\n修复项\n1. 修复项目包含多种不同类型耗材时，保存项目后在 Orca 中减少耗材数量，再次打开项目后耗材类型显示错误的问题。\n2. 修复将匹配模式的最低混色比例调整为 30% 后，“混色推荐”列表仍显示 25% 方案的问题。\n3. 修复开启“全域生效”后，同时使用单色和混色涂色且两者层高一致时，单色切片也会细分层高的问题。\n4. 修复擦拭塔用料预估计算错误的问题。\n5. 修复擦拭塔 Brim 路径与模型 Brim 路径发生干涉的问题。\n6. 修复热更新后，Web 资源和工艺资源无法正常使用的问题。\n7. 调整支撑独立层高参数的显示逻辑。无需关闭擦拭塔即可显示，且默认不勾选。\n8. 修复部分 PC 上启动 Snapmaker Orca 后出现卡顿的问题。"
         }
     }
 }
