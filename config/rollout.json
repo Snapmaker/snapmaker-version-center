@@ -2,7 +2,7 @@
   "version": 1,
   "products": {
     "firmware/a400": { "percent": 100 },
-    "firmware/j1": { "percent": 10 },
+    "firmware/j1": { "percent": 0 },
     "firmware/fabscreen": { "percent": 100 },
     "app/android": { "percent": 100 },
     "app/ios": { "percent": 100 },
