@@ -10,7 +10,8 @@ import type { ProductRollout, RolloutConfig } from './types';
  */
 
 export interface Env {
-  /** 源站（仓库部署的 Pages 域名），Worker 从这里取 version.json 和 config/rollout.json。 */
+  /** 源站基址：GitHub raw（如 https://raw.githubusercontent.com/OWNER/REPO/main）。
+   *  Worker 从这里取 version.json 和 config/rollout.json。不能以 / 结尾。 */
   ORIGIN: string;
 }
 
@@ -36,10 +37,14 @@ function getSerial(request: Request): string | null {
   return header || null;
 }
 
-/** 把当前请求路径映射到源站（Pages）的对应 URL，忽略查询串。 */
+/**
+ * 把当前请求路径映射到源站的对应 URL，忽略查询串。
+ * ORIGIN 可能带路径（GitHub raw 的 /OWNER/REPO/BRANCH），故用相对路径拼接：
+ * new URL(pathname, ORIGIN) 会因为 pathname 以 / 开头而覆盖掉 ORIGIN 的路径。
+ */
 function originUrl(request: Request, env: Env): string {
   const url = new URL(request.url);
-  return new URL(url.pathname, env.ORIGIN).toString();
+  return new URL(url.pathname.slice(1), env.ORIGIN + '/').toString();
 }
 
 /**
@@ -49,12 +54,12 @@ function originUrl(request: Request, env: Env): string {
  * - 配置缺失（404）或内容为空 → 空配置，所有产品回到 100% 全量。
  *   理由：灰度是"可选功能"，没有配置就不应影响升级，零配置即可上线。
  * - 读取/解析异常 → 同样 fail-open 到 100%，但 console.error 记录。
- *   风险说明：配置与 version.json 同源（都在 Pages），配置读不到时 version.json
+ *   风险说明：配置与 version.json 同源（都在 GitHub raw），配置读不到时 version.json
  *   通常也读不到，请求本就会失败；所以这里 fail-open 撞破安全闸的实际概率很低。
  */
 async function loadConfig(env: Env): Promise<RolloutConfig> {
   try {
-    const res = await fetch(new URL('/config/rollout.json', env.ORIGIN).toString(), {
+    const res = await fetch(new URL('config/rollout.json', env.ORIGIN + '/').toString(), {
       cf: { cacheTtl: CONFIG_CACHE_TTL },
     });
     if (!res.ok) return EMPTY_CONFIG;

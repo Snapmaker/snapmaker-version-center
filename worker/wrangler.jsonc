@@ -2,9 +2,5 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "snapmaker-version-center",
   "main": "src/index.ts",
-  "compatibility_date": "2026-08-01",
-  "vars": {
-    // 源站：仓库部署的 Pages 域名（海外）。Worker 从这里取 version.json 和 config/rollout.json。
-    "ORIGIN": "https://snapmaker.com"
-  }
+  "compatibility_date": "2026-08-01"
 }
