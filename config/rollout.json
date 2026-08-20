@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "products": {
+    "firmware/a400": { "percent": 100 },
+    "firmware/j1": { "percent": 100 },
+    "firmware/fabscreen": { "percent": 100 },
+    "app/android": { "percent": 100 },
+    "app/ios": { "percent": 100 },
+    "app/harmonyOS": { "percent": 100 },
+    "orca/win": { "percent": 100 },
+    "orca/mac": { "percent": 100 },
+    "flutter": { "percent": 100 },
+    "profile": { "percent": 100 }
+  }
+}

@@ -19,3 +19,8 @@ temp_oss/
 #claude
 
 .DS_Store
+
+# Worker
+node_modules/
+.wrangler/
+worker/.wrangler/
