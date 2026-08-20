@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "snapmaker-version-center",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-01",
+  // 源站：Worker 从这里取 version.json 和 config/rollout.json。
+  // 仓库 PUBLIC，直接读 GitHub raw 无需 token。ORIGIN 不能以 / 结尾。
+  "vars": {
+    "ORIGIN": "https://raw.githubusercontent.com/Snapmaker/snapmaker-version-center/main"
+  }
+}
