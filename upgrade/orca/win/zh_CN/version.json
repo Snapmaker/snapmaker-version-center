@@ -1,22 +1,22 @@
 {
-    "code": 200,
-    "msg": "",
-    "data": {
-        "is_full_upgrade": true,
-        "is_force_upgrade": false,
-        "version": "2.3.5",
-        "release_type": "stable",
-        "platform_type": "win",
-        "full": {
-            "default": {
-                "file_size": 107851312,
-                "file_md5": "46e084b44d138e5e7f010140294cfd76",
-                "file_sha256": "7d9a1e715564abf6a882da195c83bc0e2c24a34a6f76098b81ec7e94578b4ce1",
-                "file_url": "https://cdn1.snapmaker.cn/orca/2.3.5/Snapmaker_Orca_Windows_Installer_V2.3.5.exe",
-                "reserved_1": "",
-                "reserved_2": ""
-            },
-            "file_describe": "新增项\n1. 新增顶盖控制功能。\n[图片]\n2. 新增耗材同步功能，支持通过颜色匹配或直接覆盖将机器耗材信息同步至 Orca。\n[图片]\n[图片]\n3. 新增官方耗材色库面板, 支持双色官方耗材。\n[图片]\n4. 新增可变层高与混色细分层高同时启用时的警告提示。\n[图片]\n5. 混色模式下，使用不兼容耗材混色方案时，禁止切片并提示错误。\n[图片]\n6. 新增 Snapmaker PVA，并优化 Snapmaker PLA-CF 和 Snapmaker TPU 的参数配置。\n\n优化项\n1. 优化擦除塔结构，预留外墙缺口。\n[图片]\n2. Snapmaker Orca 启动动画更新。\n[图片]\n\n修复项\n1. 修复项目包含多种不同类型耗材时，保存项目后在 Orca 中减少耗材数量，再次打开项目后耗材类型显示错误的问题。\n2. 修复将匹配模式的最低混色比例调整为 30% 后，“混色推荐”列表仍显示 25% 方案的问题。\n3. 修复开启“全域生效”后，同时使用单色和混色涂色且两者层高一致时，单色切片也会细分层高的问题。\n[图片]\n4. 修复擦拭塔用料预估计算错误的问题。\n5. 修复擦拭塔 Brim 路径与模型 Brim 路径发生干涉的问题。\n6. 修复热更新后，Web 资源和工艺资源无法正常使用的问题。\n7. 调整支撑独立层高参数的显示逻辑。无需关闭擦拭塔即可显示，且默认不勾选。\n8. 修复部分 PC 上启动 Snapmaker Orca 后出现卡顿的问题。"
-        }
+  "code": 200,
+  "msg": "",
+  "data": {
+    "is_full_upgrade": true,
+    "is_force_upgrade": false,
+    "version": "2.3.6",
+    "release_type": "stable",
+    "platform_type": "win",
+    "full": {
+      "default": {
+        "file_size": 108198640,
+        "file_md5": "CCC90605DBB60B4E6C3F2F9F7BA0E548",
+        "file_sha256": "787D7648B4B6B1420AE3A594A82CEF62CEFC2AA56D748550E3B649EA2555D4B2",
+        "file_url": "https://cdn1.snapmaker.cn/orca/2.3.6/Snapmaker_Orca_Windows_Installer_V2.3.6.exe",
+        "reserved_1": "",
+        "reserved_2": ""
+      },
+      "file_describe": "新增项 \n\n1. 新增延时摄影文件导出功能， 仅固件 V1.6.0 及以上的版本支持。\n\n[视频]\n\n  - 在发送打印前，请确认在偏好设置中已勾选延时摄影。\n\n  - 打印完成后，可在本地文件中下载延时摄影视频。\n\n[图片]\n\n[图片]\n\n2. 新增打印偏好设置功能，支持炒面检测（Spaghetti Detection）和异物检测。\n\n  - 打印过程中，若系统检测到炒面缺陷或异物，将在软件界面或设备端发出提醒，帮助您及时处理异常。\n\n[图片]\n\n[图片]\n\n[图片]\n\n3. 新增相机适配功能，支持一键自动缩放和平移摄像机，完整展示场景内全部或当前选中的模型。\n\n[视频]\n\n4. 新增混色匹配映射功能，支持多色模型（尤其是超过4色）自动获取色域内可靠的匹配方案。\n\n  -  新增适配混色匹配的工艺预设：0.10mm Color Mixing @Snapmaker U1 (0.4 nozzle)。\n\n[图片]\n\n5. 新增耗材 Snapmaker PLA Full Spectrum，适配直径为 0.2mm 和 0.6mm 的喷嘴。\n\n[图片]\n\n  - 请选择内置的“Snapmaker PLA Full Spectrum”参数包，搭配混色功能以获得更好的色彩效果。\n\n  - 推荐使用 0.4 mm 及以下口径的热端，搭配 0.1 mm 及以下的层高进行打印。若使用更大口径的热端和更高的层高，可能导致成品出现明显横纹。\n\n  - 操作指引：可参考 https://wiki.snapmaker.com/zh/snapmaker_orca/snapmaker_orca_full_spectrum\n\n优化项\n\n1. 优化耗材同步功能中的颜色匹配算法。\n\n2. 优化视图区渲染性能。\n\n  - 仅渲染视野内的模型部分，有效减少卡顿，提升操作流畅度。\n\n修复项\n\n1. 修复在 Windows / Linux 系统下，对满盘模型进行切片时因内存占用过大导致软件崩溃的问题。\n\n  - 现已增加内存守护行为，在满盘切片时，将提示您是否继续切片。\n\n2. 修复不同耗材的床板温度兼容问题。当使用的多种耗材所需的床板温度不一致时，系统默认选取较高温度。\n\n3. 修复使用全盘整理功能时， Orca 闪退的问题。\n\n4. 修复在混色功能中使用标签页（Tab）切换页面后，匹配模式比例展示异常的问题。\n\n5. 修复在 Windows 系统上新增耗材或机器配置时，界面加载慢的问题。\n\n6. 修复在 Windows 系统上导入文件名包含特殊字符（如扩展 Unicode 字符或 emoji）的模型文件时，Orca 显示为空模型、加载失败的问题。\n\n7. 修复在国内环境下，用户在 App 端改密码后， Orca 端登录失效的问题。\n\n8. 修复重复导入同一 G-code 文件时，软件意外崩溃的问题。\n\n9. 修复在 V2.3.5 版本中，从“准备”页切换至“预览”页时，系统自动切片所有打印盘的问题。现优化为仅切片当前在“准备”页中选中的盘。\n\n10. 修复档耗材的流量比例设置为0时，仍可继续切片的问题。现改为阻止切片并弹出错误提示窗口。\n\n11. 修复将 Orca 设为 G-code 文件默认打开程序后，双击 G-code 文件导致软件崩溃的问题。"
     }
+  }
 }
