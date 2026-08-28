@@ -9,25 +9,25 @@
     "platform_type": "mac",
     "full": {
       "default": {
-        "file_size": 230416775,
-        "file_md5": "D63C949A1B0CC1EDA5FA82F01C2EB74F",
-        "file_sha256": "35A7F9B0AA295C0D299A00D5E5EA056B703AE98AC37A87F4070AD713CFCD9249",
+        "file_size": 229706421,
+        "file_md5": "6B682723AC1D6C6767313DB88A87A681",
+        "file_sha256": "D19A670090E23EEC417AA4E15DE75EFC57EAB993328A59ED5E1E14459C0B5614",
         "file_url": "https://cdn.snapmaker.com/software/orca/2.3.6/Snapmaker_Orca_Mac_universal_V2.3.6.dmg",
         "reserved_1": "",
         "reserved_2": ""
       },
       "arm": {
-        "file_size": 230416775,
-        "file_md5": "D63C949A1B0CC1EDA5FA82F01C2EB74F",
-        "file_sha256": "35A7F9B0AA295C0D299A00D5E5EA056B703AE98AC37A87F4070AD713CFCD9249",
+        "file_size": 229706421,
+        "file_md5": "6B682723AC1D6C6767313DB88A87A681",
+        "file_sha256": "D19A670090E23EEC417AA4E15DE75EFC57EAB993328A59ED5E1E14459C0B5614",
         "file_url": "https://cdn.snapmaker.com/software/orca/2.3.6/Snapmaker_Orca_Mac_universal_V2.3.6.dmg",
         "reserved_1": "",
         "reserved_2": ""
       },
       "intel": {
-        "file_size": 230416775,
-        "file_md5": "D63C949A1B0CC1EDA5FA82F01C2EB74F",
-        "file_sha256": "35A7F9B0AA295C0D299A00D5E5EA056B703AE98AC37A87F4070AD713CFCD9249",
+        "file_size": 229706421,
+        "file_md5": "6B682723AC1D6C6767313DB88A87A681",
+        "file_sha256": "D19A670090E23EEC417AA4E15DE75EFC57EAB993328A59ED5E1E14459C0B5614",
         "file_url": "https://cdn.snapmaker.com/software/orca/2.3.6/Snapmaker_Orca_Mac_universal_V2.3.6.dmg",
         "reserved_1": "",
         "reserved_2": ""

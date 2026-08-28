@@ -9,9 +9,9 @@
     "platform_type": "win",
     "full": {
       "default": {
-        "file_size": 108198640,
-        "file_md5": "CCC90605DBB60B4E6C3F2F9F7BA0E548",
-        "file_sha256": "787D7648B4B6B1420AE3A594A82CEF62CEFC2AA56D748550E3B649EA2555D4B2",
+        "file_size": 108196288,
+        "file_md5": "F53C9BE9C38F67F48D03F8B0848DA5CF",
+        "file_sha256": "F85AFD7E4DCD9B419CF841C289D4873D4173C65D237B4F9F213C6A7037A99108",
         "file_url": "https://cdn.snapmaker.com/software/orca/2.3.6/Snapmaker_Orca_Windows_Installer_V2.3.6.exe",
         "reserved_1": "",
         "reserved_2": ""
