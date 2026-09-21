@@ -4,12 +4,12 @@
     "data": {
         "is_force_upgrade":false,
         "min_support_pc_version":"2.3.5",
-        "max_support_pc_version":"2.3.5",
-        "file_version": "02.02.53.02",
+        "max_support_pc_version":"2.3.6",
+        "file_version": "02.02.56.02",
         "file_size":400335,
         "file_md5": "0F495906B5D5EA17A1B7E72419B64B9E",
         "file_sha256":"32CF79047A97A79CA80335AB4E019CDA21C156072C39DD6C4C81ACC58F42A573",
-        "file_url": "https://public.resource.snapmaker.com/upgrade/packages/profile/02.02.53.02/profiles.zip",        
+        "file_url": "https://public.resource.snapmaker.com/upgrade/packages/profile/02.02.56.02/profiles.zip",        
         "file_describe": "this is slice preset upgrade for snapmaker orca.",	
 		"reserved_1":"",
 		"reserved_2":""
