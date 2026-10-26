@@ -3,18 +3,28 @@
   "data": {
     "has_update": true,
     "is_force": false,
-    "latest_version": "2.2.2",
-    "latest_build_number": 1226223524,
+    "latest_version": "2.4.2",
+    "latest_build_number": 1326102019,
     "contents": {
       "en": {
         "title": "New Version Avail",
         "description": "Improve the experience, please upgrade to the latest version as soon as possible",
-        "items": []
+        "items": [
+          "New Features",
+          "1. Snapmaker Space support — a dedicated model site for U1, where you can discover more 3D models.",
+          "Bug Fixes",
+          "1. Fixed other known issues and improved app stability."
+        ]
       },
       "zh": {
         "title": "发现新版本",
         "description": "优化整体体验，请尽快升级最新版本",
-        "items": []
+        "items": [
+          "新增项",
+          "1. Snapmaker Space 支持——U1 的专属模型站点，在这里可以发现更多 3D 模型。",
+          "修复项",
+          "1. 修复其他已知问题，提升 APP 使用稳定性。"
+        ]
       }
     },
     "ios":{
