@@ -4,31 +4,31 @@
     "data": {
         "is_full_upgrade": true,
         "is_force_upgrade": false,
-        "version": "2.4.0",
+        "version": "2.4.1",
         "release_type": "stable",
         "platform_type": "mac",
         "full": {
             "default": {
-                "file_size": 251989415,
-                "file_md5": "FF913869C2DCAB47431ED5A4F1B3435B",
-                "file_sha256": "FC767BD09E523870A5164426B2D85FDD2259936079AB2159B0EBF4AB21BDD97C",
-                "file_url": "https://cdn.snapmaker.com/software/orca/2.4.0/Snapmaker_Orca_Mac_universal_V2.4.0.dmg",
+                "file_size": 274143110,
+                "file_md5": "5711db18636c460f89949e6db9a0912e",
+                "file_sha256": "7a590830a39835d103cd00f06f558eb0332fb4feda761e9397724c554720815f",
+                "file_url": "https://cdn.snapmaker.com/software/orca/2.4.1/Snapmaker_Orca_Mac_universal_V2.4.1.dmg",
                 "reserved_1": "",
                 "reserved_2": ""
             },
             "arm": {
-                "file_size": 251989415,
-                "file_md5": "FF913869C2DCAB47431ED5A4F1B3435B",
-                "file_sha256": "FC767BD09E523870A5164426B2D85FDD2259936079AB2159B0EBF4AB21BDD97C",
-                "file_url": "https://cdn.snapmaker.com/software/orca/2.4.0/Snapmaker_Orca_Mac_universal_V2.4.0.dmg",
+                "file_size": 274143110,
+                "file_md5": "5711db18636c460f89949e6db9a0912e",
+                "file_sha256": "7a590830a39835d103cd00f06f558eb0332fb4feda761e9397724c554720815f",
+                "file_url": "https://cdn.snapmaker.com/software/orca/2.4.1/Snapmaker_Orca_Mac_universal_V2.4.1.dmg",
                 "reserved_1": "",
                 "reserved_2": ""
             },
             "intel": {
-                "file_size": 251989415,
-                "file_md5": "FF913869C2DCAB47431ED5A4F1B3435B",
-                "file_sha256": "FC767BD09E523870A5164426B2D85FDD2259936079AB2159B0EBF4AB21BDD97C",
-                "file_url": "https://cdn.snapmaker.com/software/orca/2.4.0/Snapmaker_Orca_Mac_universal_V2.4.0.dmg",
+                "file_size": 274143110,
+                "file_md5": "5711db18636c460f89949e6db9a0912e",
+                "file_sha256": "7a590830a39835d103cd00f06f558eb0332fb4feda761e9397724c554720815f",
+                "file_url": "https://cdn.snapmaker.com/software/orca/2.4.1/Snapmaker_Orca_Mac_universal_V2.4.1.dmg",
                 "reserved_1": "",
                 "reserved_2": ""
             },

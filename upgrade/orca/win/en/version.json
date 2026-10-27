@@ -4,15 +4,15 @@
   "data": {
     "is_full_upgrade": true,
     "is_force_upgrade": false,
-    "version": "2.4.0",
+    "version": "2.4.1",
     "release_type": "stable",
     "platform_type": "win",
     "full": {
       "default": {
-        "file_size": 114049632,
-        "file_md5": "576366FD060F7D8AA78F9D06C3F116CD",
-        "file_sha256": "66E50A3D402A023E6F2C1E0D2FB4D6E5D043242BB252F526D6020045B73EFF39",
-        "file_url": "https://cdn.snapmaker.com/software/orca/2.4.0/Snapmaker_Orca_Windows_Installer_V2.4.0.exe",
+        "file_size": 133543472,
+        "file_md5": "4A6D17A66A5568DE0F57A5C51A1FECE1",
+        "file_sha256": "B5BCE2CDE81FD889DE2BB6CF95CBED26583CFA37AA5754309E0CA21CB95EFDB3",
+        "file_url": "https://cdn.snapmaker.com/software/orca/2.4.1/Snapmaker_Orca_Windows_Installer_V2.4.1.exe",
         "reserved_1": "",
         "reserved_2": ""
       },
