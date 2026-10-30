@@ -3,18 +3,28 @@
   "data": {
     "has_update": true,
     "is_force": false,
-    "latest_version": "2.3.4",
-    "latest_build_number": 1326032100,
+    "latest_version": "2.4.2",
+    "latest_build_number": 1326102600,
     "contents": {
       "en": {
         "title": "New Version Avail",
-        "description": "Added model library section to support online initiation of printing process.",
-        "items": []
+        "description": "Improve the experience, please upgrade to the latest version as soon as possible",
+        "items": [
+          "New Features",
+          "1. Snapmaker Space support — a dedicated model site for U1, where you can discover more 3D models.",
+          "Bug Fixes",
+          "1. Fixed other known issues and improved app stability."
+        ]
       },
       "zh": {
         "title": "发现新版本",
-        "description": "新增模型库版块，支持在线发起打印流程。",
-        "items": []
+        "description": "优化整体体验，请尽快升级最新版本",
+        "items": [
+          "新增项",
+          "1. Snapmaker Space 支持——U1 的专属模型站点，在这里可以发现更多 3D 模型。",
+          "修复项",
+          "1. 修复其他已知问题，提升 APP 使用稳定性。"
+        ]
       }
     },
     "ios":{
